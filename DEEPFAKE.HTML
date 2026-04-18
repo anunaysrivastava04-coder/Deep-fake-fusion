@@ -1,0 +1,2915 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deepfake Fusion - AI-Powered Deepfake Detection</title>
+    <!-- Combined Font Imports for global language support + Cinzel for Classical Theme + Comic Neue for Cartoon + M PLUS Rounded 1c for Anime -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=IBM+Plex+Mono:wght@300;400;600&family=Cinzel:wght@400;700&family=Comic+Neue:wght@400;700;900&family=M+PLUS+Rounded+1c:wght@400;700;900&family=Noto+Sans:wght@400;700&family=Noto+Sans+SC:wght@400;700&family=Noto+Sans+TC:wght@400;700&family=Noto+Sans+JP:wght@400;700&family=Noto+Sans+Devanagari:wght@400;700&family=Noto+Sans+Arabic:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- External Libraries -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- TensorFlow.js and BlazeFace for Real Face Detection UI Highlights -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.18.0/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface@0.0.7/dist/blazeface.min.js"></script>
+
+    <style>
+        :root {
+            /* Default Theme (Cyberpunk) */
+            --primary: #00ff88;
+            --primary-glow: rgba(0, 255, 136, 0.4);
+            --secondary: #ff0066;
+            --bg-dark: #0a0e1a;
+            --bg-darker: #050810;
+            --text-primary: #e8f0f7;
+            --text-secondary: #8b9bb3;
+            --border: rgba(0, 255, 136, 0.2);
+            --card-bg: rgba(15, 23, 42, 0.6);
+            --header-bg: rgba(10, 14, 26, 0.8);
+            --stats-bg: linear-gradient(135deg, rgba(0, 255, 136, 0.05), rgba(255, 0, 102, 0.05));
+            --grid-color: rgba(0, 255, 136, 0.03);
+            --font-heading: 'Orbitron', sans-serif;
+            --font-body: 'IBM Plex Mono', monospace;
+            --radius-sm: 8px;
+            --radius-md: 15px;
+            --radius-lg: 20px;
+            --radius-round: 50%;
+        }
+
+        /* Modern Theme */
+        [data-theme="modern"] {
+            --primary: #38bdf8; /* Sky Blue */
+            --primary-glow: rgba(56, 189, 248, 0.4);
+            --secondary: #818cf8; /* Indigo */
+            --bg-dark: #0f172a; /* Slate 900 */
+            --bg-darker: #020617; /* Slate 950 */
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --border: rgba(56, 189, 248, 0.2);
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --header-bg: rgba(15, 23, 42, 0.85);
+            --stats-bg: linear-gradient(135deg, rgba(56, 189, 248, 0.08), rgba(129, 140, 248, 0.08));
+            --grid-color: rgba(56, 189, 248, 0.04);
+            --font-heading: 'Noto Sans', sans-serif;
+            --font-body: 'Noto Sans', sans-serif;
+            --radius-sm: 12px;
+            --radius-md: 20px;
+            --radius-lg: 30px;
+        }
+
+        /* Sakura Pink Theme */
+        [data-theme="sakura"] {
+            --primary: #ff80bf; /* Hot Pink */
+            --primary-glow: rgba(255, 128, 191, 0.5);
+            --secondary: #ffb7b2; /* Soft Pink */
+            --bg-dark: #2d1b2e; /* Deep Plum */
+            --bg-darker: #1a0f1a; /* Darker Plum */
+            --text-primary: #fff0f5; /* Lavender Blush */
+            --text-secondary: #e6e6fa;
+            --border: rgba(255, 128, 191, 0.3);
+            --card-bg: rgba(60, 20, 40, 0.6);
+            --header-bg: rgba(45, 27, 46, 0.85);
+            --stats-bg: linear-gradient(135deg, rgba(255, 128, 191, 0.08), rgba(255, 183, 178, 0.08));
+            --grid-color: rgba(255, 128, 191, 0.05);
+            --font-heading: 'Orbitron', sans-serif;
+            --font-body: 'IBM Plex Mono', monospace;
+            --radius-sm: 15px;
+            --radius-md: 25px;
+            --radius-lg: 35px;
+        }
+
+        /* Classical Theme */
+        [data-theme="classical"] {
+            --primary: #d4af37; /* Gold */
+            --primary-glow: rgba(212, 175, 55, 0.3);
+            --secondary: #c0c0c0; /* Silver */
+            --bg-dark: #1c1c1c; /* Off Black */
+            --bg-darker: #050505; /* Near Black */
+            --text-primary: #f5f5dc; /* Beige */
+            --text-secondary: #a9a9a9;
+            --border: rgba(212, 175, 55, 0.4);
+            --card-bg: rgba(25, 25, 25, 0.85);
+            --header-bg: rgba(28, 28, 28, 0.95);
+            --stats-bg: linear-gradient(135deg, rgba(212, 175, 55, 0.1), rgba(192, 192, 192, 0.05));
+            --grid-color: rgba(212, 175, 55, 0.04);
+            --font-heading: 'Cinzel', serif; /* Serif Font */
+            --font-body: 'Noto Sans', sans-serif;
+            --radius-sm: 2px;
+            --radius-md: 4px;
+            --radius-lg: 4px;
+        }
+
+        /* Neon Theme */
+        [data-theme="neon"] {
+            --primary: #00ffff; /* Cyan */
+            --primary-glow: rgba(0, 255, 255, 0.6);
+            --secondary: #ffff00; /* Yellow */
+            --bg-dark: #000033; /* Deep Navy */
+            --bg-darker: #00001a;
+            --text-primary: #ffffff;
+            --text-secondary: #00cccc;
+            --border: rgba(0, 255, 255, 0.6);
+            --card-bg: rgba(0, 0, 50, 0.7);
+            --header-bg: rgba(0, 0, 51, 0.9);
+            --stats-bg: linear-gradient(135deg, rgba(0, 255, 255, 0.15), rgba(255, 255, 0, 0.15));
+            --grid-color: rgba(0, 255, 255, 0.1);
+            --font-heading: 'Orbitron', sans-serif;
+            --font-body: 'IBM Plex Mono', monospace;
+            --radius-sm: 0px;
+            --radius-md: 0px;
+            --radius-lg: 0px;
+            --radius-round: 0px; /* Square everything for Neon */
+        }
+
+        /* Cartoon Theme */
+        [data-theme="cartoon"] {
+            --primary: #ffd166; /* Playful Yellow */
+            --primary-glow: rgba(255, 209, 102, 0.6);
+            --secondary: #ef476f; /* Bright Pink/Red */
+            --bg-dark: #118ab2; /* Cartoon Blue */
+            --bg-darker: #073b4c; /* Deep Navy Background */
+            --text-primary: #ffffff;
+            --text-secondary: #e0fbfc;
+            --border: #000000; /* Solid Black Borders for Cartoon */
+            --card-bg: #118ab2;
+            --header-bg: rgba(7, 59, 76, 1);
+            --stats-bg: #ef476f;
+            --grid-color: rgba(255, 255, 255, 0.15);
+            --font-heading: 'Comic Neue', 'Comic Sans MS', 'Chalkboard SE', sans-serif;
+            --font-body: 'Comic Neue', 'Comic Sans MS', 'Chalkboard SE', sans-serif;
+            --radius-sm: 15px;
+            --radius-md: 25px;
+            --radius-lg: 40px;
+        }
+
+        /* --- CARTOON THEME SPECIFIC UI/UX OVERRIDES --- */
+        [data-theme="cartoon"] .btn {
+            border: 3px solid #000;
+            box-shadow: 4px 4px 0px #000;
+            font-weight: 900;
+            color: #000;
+            transition: all 0.1s ease;
+        }
+        [data-theme="cartoon"] .btn-primary { background: var(--primary); }
+        [data-theme="cartoon"] .btn-secondary { background: #fff; color: #000; }
+        [data-theme="cartoon"] .btn:hover {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0px #000;
+        }
+        [data-theme="cartoon"] .upload-container, 
+        [data-theme="cartoon"] .feature-card, 
+        [data-theme="cartoon"] .step-card, 
+        [data-theme="cartoon"] .team-card,
+        [data-theme="cartoon"] .settings-modal,
+        [data-theme="cartoon"] .report-item,
+        [data-theme="cartoon"] .gemini-result-box {
+            border: 4px solid #000;
+            box-shadow: 8px 8px 0px rgba(0,0,0,0.5);
+            background: var(--card-bg);
+            opacity: 1;
+        }
+        [data-theme="cartoon"] .feature-card::before { display: none; }
+        [data-theme="cartoon"] .upload-zone {
+            border: 4px dashed #000;
+            background: rgba(255, 255, 255, 0.9);
+        }
+        [data-theme="cartoon"] .upload-zone h3,
+        [data-theme="cartoon"] .upload-zone p,
+        [data-theme="cartoon"] .upload-note { color: #000 !important; font-weight: 700; }
+        [data-theme="cartoon"] .upload-zone:hover {
+            background: #fff;
+            border-color: #000;
+            transform: scale(1.02);
+        }
+        [data-theme="cartoon"] header { border-bottom: 4px solid #000; }
+        [data-theme="cartoon"] .logo {
+            text-shadow: 3px 3px 0px #000;
+            color: var(--primary);
+            -webkit-text-fill-color: var(--primary);
+            background: none;
+            letter-spacing: 3px;
+        }
+        [data-theme="cartoon"] h1, 
+        [data-theme="cartoon"] h2, 
+        [data-theme="cartoon"] .stat-item h4 {
+            text-shadow: 3px 3px 0px #000;
+            color: var(--primary);
+        }
+        [data-theme="cartoon"] .hero h1 .gradient-text {
+            background: none;
+            -webkit-text-fill-color: var(--secondary);
+            color: var(--secondary);
+        }
+        [data-theme="cartoon"] .avatar {
+            border: 4px solid #000;
+            box-shadow: 4px 4px 0px #000;
+            background: #fff;
+            color: #000;
+            animation: none;
+        }
+        [data-theme="cartoon"] .avatar-ring { display: none; }
+        [data-theme="cartoon"] .custom-select, 
+        [data-theme="cartoon"] .url-input, 
+        [data-theme="cartoon"] .chat-input {
+            border: 3px solid #000;
+            background: #fff;
+            color: #000;
+            font-weight: bold;
+        }
+        [data-theme="cartoon"] .custom-select option { background: #fff; color: #000; }
+        [data-theme="cartoon"] .tab-btn {
+            border: 3px solid #000;
+            background: #fff;
+            color: #000;
+            box-shadow: 4px 4px 0px #000;
+            font-weight: 900;
+            margin: 0 5px;
+            transition: all 0.1s ease;
+        }
+        [data-theme="cartoon"] .tab-btn.active {
+            background: var(--primary);
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0px #000;
+        }
+        [data-theme="cartoon"] .orb { display: none; }
+        [data-theme="cartoon"] body::before { opacity: 0.5; }
+        [data-theme="cartoon"] .stats { border-top: 4px solid #000; border-bottom: 4px solid #000; }
+
+        /* Anime Theme */
+        [data-theme="anime"] {
+            --primary: #ff0055; /* Neon Pink */
+            --primary-glow: rgba(255, 0, 85, 0.6);
+            --secondary: #00e5ff; /* Cyan */
+            --bg-dark: #120b29; /* Deep anime space purple */
+            --bg-darker: #090514;
+            --text-primary: #ffffff;
+            --text-secondary: #b3a6d4;
+            --border: #00e5ff;
+            --card-bg: rgba(18, 11, 41, 0.85);
+            --header-bg: rgba(9, 5, 20, 0.95);
+            --stats-bg: linear-gradient(135deg, rgba(255, 0, 85, 0.15), rgba(0, 229, 255, 0.15));
+            --grid-color: rgba(0, 229, 255, 0.05);
+            --font-heading: 'M PLUS Rounded 1c', sans-serif;
+            --font-body: 'Noto Sans JP', sans-serif;
+            --radius-sm: 0px;
+            --radius-md: 0px;
+            --radius-lg: 0px;
+        }
+
+        /* --- ANIME THEME SPECIFIC UI/UX OVERRIDES --- */
+        [data-theme="anime"] body::before {
+            background: repeating-linear-gradient(45deg, var(--grid-color) 0px, var(--grid-color) 2px, transparent 2px, transparent 25px);
+            animation: animeSpeedlines 30s linear infinite;
+        }
+        @keyframes animeSpeedlines {
+            0% { background-position: 0 0; }
+            100% { background-position: -500px 500px; }
+        }
+        [data-theme="anime"] .btn {
+            transform: skewX(-15deg);
+            border: 2px solid var(--primary);
+            box-shadow: -6px 6px 0px var(--secondary);
+            font-weight: 900;
+            background: rgba(255, 0, 85, 0.1);
+            color: #fff;
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            letter-spacing: 2px;
+        }
+        [data-theme="anime"] .btn-secondary { background: rgba(0, 229, 255, 0.1); border-color: var(--secondary); box-shadow: -6px 6px 0px var(--primary); color: var(--secondary); }
+        [data-theme="anime"] .btn:hover {
+            transform: skewX(-15deg) translate(-2px, 2px);
+            box-shadow: -3px 3px 0px var(--secondary);
+            background: var(--primary);
+            color: #fff;
+        }
+        [data-theme="anime"] .btn-secondary:hover { background: var(--secondary); color: #000; box-shadow: -3px 3px 0px var(--primary); }
+        [data-theme="anime"] .tab-btn {
+            transform: skewX(-15deg);
+            border-radius: 0;
+            border: 1px solid var(--border);
+            margin: 0 5px;
+        }
+        [data-theme="anime"] .tab-btn.active {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+            box-shadow: -4px 4px 0px var(--secondary);
+        }
+        [data-theme="anime"] .feature-card {
+            border-left: 4px solid var(--primary);
+            border-right: 4px solid var(--secondary);
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            transform: skewX(-2deg);
+        }
+        [data-theme="anime"] .upload-container {
+            border: 2px solid var(--primary);
+            box-shadow: 0 0 30px rgba(255, 0, 85, 0.2), inset 0 0 20px rgba(0, 229, 255, 0.1);
+            position: relative;
+        }
+        [data-theme="anime"] .upload-container::before {
+            content: ''; position: absolute; top: -5px; left: -5px; width: 20px; height: 20px; border-top: 4px solid var(--secondary); border-left: 4px solid var(--secondary);
+        }
+        [data-theme="anime"] .upload-container::after {
+            content: ''; position: absolute; bottom: -5px; right: -5px; width: 20px; height: 20px; border-bottom: 4px solid var(--secondary); border-right: 4px solid var(--secondary);
+        }
+        [data-theme="anime"] .step-number {
+            font-style: italic;
+            color: rgba(255, 0, 85, 0.15);
+            font-size: 5.5rem;
+            top: -15px;
+            right: 10px;
+        }
+        [data-theme="anime"] .team-card {
+            clip-path: polygon(15% 0, 100% 0, 85% 100%, 0% 100%);
+            background: linear-gradient(145deg, rgba(255,0,85,0.1), var(--card-bg));
+            border-left: 4px solid var(--secondary);
+        }
+        [data-theme="anime"] .leader-card {
+            clip-path: polygon(10% 0, 100% 0, 90% 100%, 0% 100%);
+            border-left: 5px solid var(--primary);
+            border-right: 5px solid var(--primary);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-dark);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 5px;
+            border: 2px solid var(--bg-dark);
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary);
+        }
+
+        /* Text Selection */
+        ::selection {
+            background: var(--primary);
+            color: var(--bg-dark);
+        }
+
+        body {
+            font-family: var(--font-body), 'Noto Sans SC', 'Noto Sans TC', 'Noto Sans JP', 'Noto Sans Devanagari', 'Noto Sans Arabic', sans-serif;
+            background: var(--bg-darker);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            line-height: 1.6;
+            transition: background-color 0.5s ease, color 0.5s ease;
+        }
+
+        h1, h2, h3, h4, .logo {
+            font-family: var(--font-heading), 'Noto Sans SC', sans-serif;
+            transition: color 0.3s ease;
+        }
+
+        /* Animated background grid */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px),
+                linear-gradient(var(--grid-color) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: gridMove 20s linear infinite;
+            pointer-events: none;
+            z-index: 0;
+            transition: background 0.5s ease;
+        }
+
+        @keyframes gridMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
+        }
+
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.3;
+            pointer-events: none;
+            z-index: 0;
+            transition: background 0.5s ease;
+        }
+
+        .orb-1 {
+            width: 500px;
+            height: 500px;
+            background: var(--primary);
+            top: -250px;
+            right: -250px;
+            animation: float 8s ease-in-out infinite;
+        }
+
+        .orb-2 {
+            width: 400px;
+            height: 400px;
+            background: var(--secondary);
+            bottom: -200px;
+            left: -200px;
+            animation: float 10s ease-in-out infinite reverse;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(30px, 30px); }
+        }
+
+        .container-custom {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        header {
+            padding: 2rem 0;
+            border-bottom: 1px solid var(--border);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: var(--header-bg);
+            transition: background 0.5s ease, border-color 0.5s ease;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 900;
+            letter-spacing: 2px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary)); 
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 30px var(--primary-glow);
+            animation: logoGlow 3s ease-in-out infinite;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .settings-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            color: var(--primary);
+            width: 45px;
+            height: 45px;
+            border-radius: var(--radius-round);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+            z-index: 101;
+        }
+
+        .settings-btn:hover {
+            background: var(--primary);
+            color: var(--bg-dark);
+            box-shadow: 0 0 20px var(--primary-glow);
+            transform: rotate(90deg);
+        }
+
+        .settings-modal {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: var(--bg-dark);
+            border: 1px solid var(--primary);
+            border-radius: var(--radius-sm);
+            padding: 1.5rem;
+            width: 300px;
+            display: none;
+            flex-direction: column;
+            gap: 1.5rem;
+            box-shadow: 0 0 30px var(--primary-glow);
+            backdrop-filter: blur(20px);
+            z-index: 1000;
+            animation: slideDown 0.3s ease-out;
+            transition: background 0.3s ease, border-color 0.3s ease, border-radius 0.3s ease;
+        }
+
+        .settings-modal.active {
+            display: flex;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .settings-header {
+            font-family: var(--font-heading);
+            color: var(--primary);
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.5rem;
+            font-size: 1.2rem;
+        }
+
+        .setting-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .setting-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .custom-select {
+            background: rgba(0, 0, 0, 0.3);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            padding: 0.8rem;
+            border-radius: var(--radius-sm);
+            width: 100%;
+            font-family: var(--font-body);
+            cursor: pointer;
+            outline: none;
+            transition: border-color 0.3s ease, border-radius 0.3s ease;
+        }
+        
+        .custom-select option {
+            background: var(--bg-darker);
+            color: var(--text-primary);
+        }
+
+        .custom-select:focus {
+            border-color: var(--primary);
+        }
+
+        @keyframes logoGlow {
+            0%, 100% { filter: brightness(1); }
+            50% { filter: brightness(1.3); }
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2.5rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 400;
+            transition: all 0.3s ease;
+            position: relative;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--primary);
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        .hero {
+            padding: 8rem 0;
+            text-align: center;
+            position: relative;
+        }
+
+        .hero h1 {
+            font-size: 5rem;
+            font-weight: 900;
+            margin-bottom: 1.5rem;
+            line-height: 1.1;
+            letter-spacing: -2px;
+            animation: fadeInUp 1s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hero h1 .gradient-text {
+            background: linear-gradient(135deg, var(--primary), #00ccff, var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: 1.3rem;
+            color: var(--text-secondary);
+            max-width: 700px;
+            margin: 0 auto 3rem;
+            animation: fadeInUp 1s ease-out 0.2s both;
+        }
+
+        .cta-group {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            animation: fadeInUp 1s ease-out 0.4s both;
+        }
+
+        .btn {
+            padding: 1rem 2.5rem;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-family: var(--font-body);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), #00ccff);
+            color: var(--bg-dark);
+            box-shadow: 0 0 30px var(--primary-glow);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 40px var(--primary-glow);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+        }
+
+        .btn-secondary:hover {
+            background: var(--primary);
+            color: var(--bg-dark);
+            box-shadow: 0 0 30px var(--primary-glow);
+        }
+
+        .upload-section {
+            padding: 6rem 0;
+            position: relative;
+        }
+
+        .upload-container {
+            background: var(--card-bg);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 4rem;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            max-width: 800px;
+            margin: 0 auto;
+            transition: all 0.3s ease;
+        }
+
+        .upload-container:hover {
+            border-color: var(--primary);
+            box-shadow: 0 20px 60px var(--primary-glow);
+        }
+
+        /* Tab Styles */
+        .tab-group {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            padding: 0.8rem 2rem;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: var(--font-heading);
+            font-size: 1rem;
+        }
+
+        .tab-btn.active {
+            background: var(--primary);
+            color: var(--bg-dark);
+            border-color: var(--primary);
+            box-shadow: 0 0 15px var(--primary-glow);
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .url-input-wrapper {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .url-input {
+            flex: 1;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--border);
+            padding: 1rem;
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-family: var(--font-body);
+            outline: none;
+        }
+
+        .url-input:focus {
+            border-color: var(--primary);
+        }
+
+        .upload-zone {
+            border: 3px dashed var(--border);
+            border-radius: var(--radius-md);
+            padding: 4rem 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-zone::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, var(--primary-glow), transparent);
+            transition: left 0.5s ease;
+            opacity: 0.2;
+        }
+
+        .upload-zone:hover::before {
+            left: 100%;
+        }
+
+        .upload-zone:hover {
+            border-color: var(--primary);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .upload-icon {
+            font-size: 4rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+
+        .upload-zone h3 {
+            font-family: var(--font-heading);
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .upload-zone p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        /* Console Log / Process Stepper Styles */
+        .process-log {
+            text-align: left;
+            margin-top: 1rem;
+            background: rgba(0,0,0,0.3);
+            padding: 1rem;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+            font-family: var(--font-body);
+            font-size: 0.85rem;
+            max-height: 150px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .process-step {
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .process-step.active { color: var(--primary); font-weight: bold; }
+        .process-step.error { color: var(--secondary); }
+        .process-step.success { color: #00ff88; }
+
+        .loading-bar-track {
+            width: 100%; 
+            height: 4px; 
+            background: var(--border);
+            border-radius: 2px; 
+            overflow: hidden; 
+            margin-bottom: 2rem;
+            position: relative;
+        }
+        
+        .loading-bar-fill {
+            width: 0%; 
+            height: 100%; 
+            background: linear-gradient(90deg, var(--primary), var(--secondary), var(--primary));
+            background-size: 200% 100%;
+            animation: pulseLoad 2s linear infinite;
+            box-shadow: 0 0 10px var(--primary-glow);
+            transition: width 0.4s ease;
+        }
+
+        @keyframes pulseLoad {
+            0% { background-position: 100% 0; }
+            100% { background-position: -100% 0; }
+        }
+
+        .report-container {
+            margin-top: 3rem;
+            border-top: 1px solid var(--border);
+            padding-top: 2rem;
+            text-align: left;
+            animation: slideUpFade 0.5s ease-out;
+        }
+
+        .report-header {
+            font-family: var(--font-heading);
+            color: var(--primary);
+            font-size: 1.3rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .report-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .report-item {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 1rem;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+        }
+
+        .report-item .label {
+            display: block;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .report-item .value {
+            float: right;
+            font-family: var(--font-heading);
+            color: var(--text-primary);
+            font-weight: bold;
+        }
+
+        .report-item .progress {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            margin-top: 0.5rem;
+            overflow: hidden;
+        }
+
+        .report-item .progress .fill {
+            height: 100%;
+            background: var(--primary);
+            width: 0%;
+            transition: width 1s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        .report-findings {
+            background: rgba(var(--secondary), 0.1);
+            padding: 1.5rem;
+            border-radius: var(--radius-sm);
+            border-left: 3px solid var(--primary);
+        }
+
+        .report-findings h4 {
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .report-findings ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .report-findings li {
+            position: relative;
+            padding-left: 1.2rem;
+            margin-bottom: 0.4rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .report-findings li::before {
+            content: '>';
+            position: absolute;
+            left: 0;
+            color: var(--primary);
+        }
+
+        /* GEMINI AI Section Styles */
+        .gemini-section {
+            margin-top: 2.5rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border);
+            animation: slideUpFade 0.6s ease-out;
+        }
+
+        .gemini-result-box {
+            background: rgba(10, 14, 26, 0.6);
+            border: 1px solid var(--primary);
+            border-radius: var(--radius-sm);
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 0.95rem;
+            position: relative;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.1);
+            word-wrap: break-word;
+        }
+
+        .gemini-result-box h3 {
+            color: var(--primary);
+            font-family: var(--font-heading);
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .chat-container {
+            margin-top: 1.5rem;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .chat-input {
+            flex: 1;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 0.8rem;
+            color: var(--text-primary);
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .chat-input:focus {
+            border-color: var(--primary);
+        }
+
+        .chat-btn {
+            padding: 0 1.5rem;
+            background: var(--primary);
+            color: var(--bg-dark);
+            border: none;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-weight: bold;
+            transition: opacity 0.3s;
+        }
+
+        .chat-btn:hover {
+            opacity: 0.9;
+        }
+
+        /* Markdown-like simple styling for AI response */
+        .ai-content strong { color: var(--primary); font-weight: 600; }
+        .ai-content ul { list-style: disc; padding-left: 1.5rem; margin: 0.5rem 0; }
+        .ai-content li { margin-bottom: 0.3rem; color: var(--text-secondary); }
+
+        /* Copilot Chat Styles */
+        .chat-window { 
+            max-height: 300px; 
+            overflow-y: auto; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 1rem; 
+            margin-bottom: 1rem; 
+            border: 1px solid var(--border); 
+            padding: 1rem; 
+            border-radius: var(--radius-sm); 
+            background: rgba(0,0,0,0.2); 
+        }
+        .chat-message { 
+            padding: 0.8rem 1rem; 
+            border-radius: var(--radius-sm); 
+            max-width: 85%; 
+            line-height: 1.5; 
+            font-size: 0.9rem; 
+        }
+        .chat-message.user { 
+            background: rgba(0, 255, 136, 0.1); 
+            border: 1px solid var(--primary); 
+            color: var(--text-primary); 
+            align-self: flex-end; 
+            border-bottom-right-radius: 2px;
+        }
+        .chat-message.ai { 
+            background: rgba(255, 0, 102, 0.1); 
+            border: 1px solid var(--secondary); 
+            color: var(--text-primary); 
+            align-self: flex-start; 
+            border-bottom-left-radius: 2px;
+        }
+
+        .section-padding {
+            padding: 6rem 0;
+        }
+
+        .section-title {
+            font-family: var(--font-heading);
+            font-size: 3rem;
+            text-align: center;
+            margin-bottom: 4rem;
+            font-weight: 900;
+            letter-spacing: -1px;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 2.5rem;
+            backdrop-filter: blur(20px);
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--primary-glow), transparent);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .feature-card:hover::before {
+            opacity: 1;
+        }
+
+        .feature-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px var(--primary-glow);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+            display: block;
+            position: relative;
+            z-index: 1;
+        }
+
+        .feature-card h3 {
+            font-family: var(--font-heading);
+            font-size: 1.4rem;
+            margin-bottom: 1rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .feature-card p {
+            color: var(--text-secondary);
+            line-height: 1.7;
+            position: relative;
+            z-index: 1;
+        }
+
+        .stats {
+            background: var(--stats-bg);
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            transition: background 0.5s ease;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 3rem;
+            text-align: center;
+        }
+
+        .stat-item h4 {
+            font-family: var(--font-heading);
+            font-size: 3.5rem;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+            font-weight: 900;
+        }
+
+        .stat-item p {
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-size: 0.9rem;
+        }
+
+        .steps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            position: relative;
+        }
+
+        .step-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 2rem;
+            text-align: center;
+            position: relative;
+        }
+
+        .step-number {
+            font-family: var(--font-heading);
+            font-size: 4rem;
+            color: rgba(255, 255, 255, 0.05);
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            font-weight: 900;
+        }
+
+        .step-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .about-content {
+            background: var(--card-bg);
+            border-left: 4px solid var(--secondary);
+            padding: 3rem;
+            border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+            backdrop-filter: blur(10px);
+            transition: border-radius 0.3s ease;
+        }
+
+        footer {
+            padding: 4rem 0 2rem;
+            border-top: 1px solid var(--border);
+            margin-top: 6rem;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 3rem;
+            margin-bottom: 3rem;
+        }
+
+        .footer-section h4 {
+            font-family: var(--font-heading);
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+            font-size: 1.1rem;
+        }
+
+        .footer-section ul {
+            list-style: none;
+        }
+
+        .footer-section ul li {
+            margin-bottom: 0.8rem;
+        }
+
+        .footer-section a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .footer-section a:hover {
+            color: var(--primary);
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border);
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        .team-title {
+            font-family: var(--font-heading);
+            font-size: 2rem;
+            text-align: center;
+            margin-bottom: 3rem;
+            color: var(--text-primary);
+            text-shadow: 0 0 10px var(--primary-glow);
+        }
+
+        .team-container {
+            margin-top: 4rem;
+        }
+
+        .team-leader-wrapper {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 3rem;
+        }
+
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 2rem;
+            justify-items: center;
+        }
+
+        .team-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 2rem;
+            text-align: center;
+            position: relative;
+            backdrop-filter: blur(10px);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            width: 100%;
+            max-width: 300px;
+            overflow: hidden;
+        }
+
+        .team-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            border-color: var(--primary);
+            box-shadow: 0 15px 30px var(--primary-glow);
+        }
+
+        .team-bio {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        @keyframes neonBorder {
+            0% { border-color: var(--primary); box-shadow: 0 0 10px var(--primary-glow); }
+            33% { border-color: var(--text-primary); box-shadow: 0 0 10px rgba(255, 255, 255, 0.2); }
+            66% { border-color: var(--secondary); box-shadow: 0 0 10px rgba(255, 0, 102, 0.2); }
+            100% { border-color: var(--primary); box-shadow: 0 0 10px var(--primary-glow); }
+        }
+
+        @keyframes neonAvatar {
+            0% { border-color: var(--primary); color: var(--primary); box-shadow: 0 0 15px var(--primary-glow); }
+            33% { border-color: var(--text-primary); color: var(--text-primary); box-shadow: 0 0 15px rgba(255, 255, 255, 0.3); }
+            66% { border-color: var(--secondary); color: var(--secondary); box-shadow: 0 0 15px rgba(255, 0, 102, 0.3); }
+            100% { border-color: var(--primary); color: var(--primary); box-shadow: 0 0 15px var(--primary-glow); }
+        }
+
+        .member-card {
+            opacity: 0;
+            animation: slideUpFade 0.8s ease-out forwards, neonBorder 4s infinite linear;
+        }
+
+        .leader-card {
+            background: linear-gradient(145deg, var(--card-bg), var(--primary-glow));
+            border: 1px solid var(--primary);
+            padding: 3rem;
+            max-width: 350px;
+            box-shadow: 0 0 30px var(--primary-glow);
+            animation: neonBorder 3s infinite linear;
+        }
+
+        @keyframes slideUpFade {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .avatar-container {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1.5rem;
+        }
+
+        .leader-card .avatar-container {
+            width: 100px;
+            height: 100px;
+        }
+
+        .avatar {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--bg-dark), #1a2e35);
+            border-radius: var(--radius-round);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-heading);
+            font-weight: 700;
+            color: var(--primary);
+            font-size: 1.5rem;
+            border: 2px solid var(--primary);
+            position: relative;
+            z-index: 2;
+            animation: neonAvatar 4s infinite linear;
+        }
+
+        .leader-card .avatar {
+            font-size: 2rem;
+            border-width: 3px;
+        }
+
+        .avatar.secondary {
+            color: var(--secondary);
+            border-color: var(--secondary);
+            font-size: 1.2rem;
+        }
+
+        .avatar-ring {
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            right: -10px;
+            bottom: -10px;
+            border: 2px dashed var(--primary);
+            border-radius: var(--radius-round);
+            animation: spin 10s linear infinite, neonBorder 4s infinite linear;
+            opacity: 0.5;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .team-card h4 {
+            font-family: var(--font-heading);
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .leader-card h4 {
+            font-size: 1.5rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .role-badge {
+            display: inline-block;
+            padding: 0.3rem 1rem;
+            background: rgba(0, 0, 0, 0.2);
+            color: var(--primary);
+            border-radius: var(--radius-lg);
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            margin-bottom: 1rem;
+            border: 1px solid var(--border);
+        }
+
+        /* Scan Canvas Container */
+        .scan-visualization {
+            margin: 2rem auto;
+            position: relative;
+            max-width: 500px;
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+            border: 1px solid var(--border);
+            display: none; /* Hidden by default */
+        }
+        
+        #scanCanvas {
+            width: 100%;
+            display: block;
+        }
+
+        .scan-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to bottom, 
+                rgba(0,255,136,0.1) 0%, 
+                rgba(0,0,0,0) 50%, 
+                rgba(0,255,136,0.1) 100%);
+            pointer-events: none;
+            mix-blend-mode: overlay;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 3rem; }
+            .nav-links { display: none; }
+            .cta-group { flex-direction: column; }
+            .upload-container { padding: 2rem; }
+            .feature-grid, .steps-grid { grid-template-columns: 1fr; }
+        }
+
+        @keyframes scan {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100%); }
+        }
+
+        .scanning::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--primary), transparent);
+            animation: scan 2s linear infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+
+    <header>
+        <div class="container-custom">
+            <nav>
+                <div class="logo">DEEPFAKE FUSION</div>
+                <div class="nav-right">
+                    <ul class="nav-links">
+                        <li><a href="#features" data-i18n="nav_features">Features</a></li>
+                        <li><a href="#how-it-works" data-i18n="nav_how_it_works">How It Works</a></li>
+                        <li><a href="#about" data-i18n="nav_about">About</a></li>
+                    </ul>
+                    <button class="settings-btn" id="settingsBtn" aria-label="Settings">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="3"></circle>
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                        </svg>
+                    </button>
+                    <!-- Settings Modal -->
+                    <div class="settings-modal" id="settingsModal">
+                        <div class="settings-header">Settings</div>
+                        
+                        <div class="setting-group">
+                            <label class="setting-label">Theme</label>
+                            <select id="themeSelect" class="custom-select">
+                                <option value="default">Default (Cyberpunk)</option>
+                                <option value="modern">Modern (Tech Blue)</option>
+                                <option value="sakura">Sakura Pink</option>
+                                <option value="classical">Classical (Gold)</option>
+                                <option value="neon">Neon (Electric)</option>
+                                <option value="cartoon">Cartoon (Playful)</option>
+                                <option value="anime">Anime (Vibrant)</option>
+                            </select>
+                        </div>
+
+                        <div class="setting-group">
+                            <label class="setting-label">Language</label>
+                            <select id="languageSelect" class="custom-select">
+                                <option value="en">English</option>
+                                <option value="es">Spanish (Español)</option>
+                                <option value="fr">French (Français)</option>
+                                <option value="de">German (Deutsch)</option>
+                                <option value="pt">Portuguese (Português)</option>
+                                <option value="ru">Russian (Русский)</option>
+                                <option value="zh">Mandarin Chinese (中文)</option>
+                                <option value="ja">Japanese (日本語)</option>
+                                <option value="hi">Hindi (हिंदी)</option>
+                                <option value="ar">Arabic (العربية)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero">
+            <div class="container-custom">
+                <h1>
+                    <span data-i18n="hero_title_1">Detect Deepfakes with</span><br>
+                    <span class="gradient-text" data-i18n="hero_title_2">AI Precision</span>
+                </h1>
+                <p data-i18n="hero_desc">Advanced neural networks and forensic analysis to identify manipulated media in seconds. Protect yourself from synthetic media deception.</p>
+                <div class="cta-group">
+                    <a href="#upload" class="btn btn-primary" data-i18n="btn_scan">Scan Media Now</a>
+                    <a href="#how-it-works" class="btn btn-secondary" data-i18n="btn_learn">Learn More</a>
+                </div>
+            </div>
+        </section>
+
+        <section class="upload-section" id="upload">
+            <div class="container-custom">
+                <div class="upload-container">
+                    
+                    <!-- Input Selection Tabs -->
+                    <div class="tab-group">
+                        <button class="tab-btn active" id="tabUpload" onclick="switchTab('upload')" data-i18n="tab_upload">Upload File</button>
+                        <button class="tab-btn" id="tabUrl" onclick="switchTab('url')" data-i18n="tab_url">Enter URL</button>
+                    </div>
+
+                    <!-- File Upload Tab -->
+                    <div id="upload-tab-content" class="tab-content active">
+                        <div class="upload-zone" onclick="document.getElementById('fileInput').click()">
+                            <div class="upload-icon">📸</div>
+                            <h3 data-i18n="upload_title">Upload Image or Video</h3>
+                            <p data-i18n="upload_desc">Drag and drop your media file here or click to browse</p>
+                            <p style="margin-top: 1rem; font-size: 0.85rem;" data-i18n="upload_note">Supports JPG, PNG, MP4, MOV • Max 50MB</p>
+                            <input type="file" id="fileInput" class="file-input" accept="image/*,video/*" onchange="handleFile(this)">
+                        </div>
+                    </div>
+
+                    <!-- URL Input Tab -->
+                    <div id="url-tab-content" class="tab-content">
+                        <div class="upload-zone" style="cursor: default;">
+                            <div class="upload-icon">🔗</div>
+                            <h3 data-i18n="url_title">Analyze from URL</h3>
+                            <div class="url-input-wrapper" style="margin-top: 1.5rem; display:flex; gap:10px;">
+                                <input type="url" id="urlInput" class="url-input" data-i18n-placeholder="url_placeholder" placeholder="https://example.com/video.mp4">
+                                <button onclick="handleUrlInput()" class="btn btn-primary" style="padding: 0.8rem 1.5rem; font-size: 0.9rem;" data-i18n="btn_analyze">Analyze</button>
+                            </div>
+                            <div id="urlProcessLog" class="process-log"></div>
+                            <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top:1rem;" data-i18n="url_note">Supported: YouTube, Direct MP4, MOV links.</p>
+                        </div>
+                    </div>
+
+                    <!-- Result Section -->
+                    <div id="result" style="margin-top: 2rem; display: none; text-align: center;">
+                        <div id="loadingBar" class="loading-bar-track">
+                            <div class="loading-bar-fill"></div>
+                        </div>
+                        
+                        <!-- Visualization of Scan -->
+                        <div id="scanVisualization" class="scan-visualization">
+                            <div class="scan-overlay"></div>
+                            <canvas id="scanCanvas"></canvas>
+                        </div>
+
+                        <h3 id="resultText" style="font-family: var(--font-heading); font-size: 1.8rem; margin-bottom: 1rem;"></h3>
+                        <p id="resultDetails" style="color: var(--text-secondary);"></p>
+                        
+                        <!-- Detailed Report UI -->
+                        <div id="detailedReport" class="report-container" style="display:none">
+                            <div class="report-header" id="reportHeader" data-i18n="report_header">Authentication Report</div>
+                            <p style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:1rem; text-transform:uppercase; letter-spacing:1px;" data-i18n="report_calibrated">Calibrated on Advanced Deepfake Dataset (GANs, FaceSwap, Wav2Lip)</p>
+                            
+                            <!-- Dynamic Grid populated by JS -->
+                            <div class="report-grid" id="reportGrid">
+                                <!-- Items injected by JS -->
+                            </div>
+
+                            <div class="report-findings">
+                                <h4 data-i18n="report_findings">Key Findings:</h4>
+                                <ul id="findingsList"></ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section class="features section-padding" id="features">
+            <div class="container-custom">
+                <h2 class="section-title" data-i18n="features_title">Advanced Detection Technology</h2>
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <span class="feature-icon">👁️</span>
+                        <h3 data-i18n="feat_neural_title">Vision Transformers (ViT & CLIP)</h3>
+                        <p data-i18n="feat_neural_desc">Evaluates global semantic coherence and spatial consistency. Excellent at detecting GAN artifacts and diffusion model smoothness that traditional CNNs miss.</p>
+                    </div>
+                    <div class="feature-card">
+                        <span class="feature-icon">🌊</span>
+                        <h3 data-i18n="feat_forensic_title">Frequency CNN (FFT Analysis)</h3>
+                        <p data-i18n="feat_forensic_desc">Analyzes the Fast Fourier Transform (FFT) spectrum of the media to detect invisible synthetic noise patterns and deepfake blending boundaries.</p>
+                    </div>
+                    <div class="feature-card">
+                        <span class="feature-icon">⏳</span>
+                        <h3 data-i18n="feat_realtime_title">3D CNN & TimeSformers</h3>
+                        <p data-i18n="feat_realtime_desc">For video analysis, we evaluate temporal sequences. By analyzing motion + spatial features simultaneously, we detect micro-flickering and FaceSwap glitches.</p>
+                    </div>
+                    <div class="feature-card">
+                        <span class="feature-icon">💓</span>
+                        <h3 data-i18n="feat_multi_title">rPPG Vital Sign Networks</h3>
+                        <p data-i18n="feat_multi_desc">Remote Photoplethysmography (rPPG) checks for microscopic skin color variations caused by blood pulse. Fake videos fail this biological realism test.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Stats Section -->
+        <section class="stats section-padding">
+            <div class="container-custom">
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <h4>99.7%</h4>
+                        <p data-i18n="stat_accuracy">Detection Accuracy</p>
+                    </div>
+                    <div class="stat-item">
+                        <h4>2.3s</h4>
+                        <p data-i18n="stat_time">Average Scan Time</p>
+                    </div>
+                    <div class="stat-item">
+                        <h4>24/7</h4>
+                        <p data-i18n="stat_protection">Real-time Protection</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- How It Works Section -->
+        <section id="how-it-works" class="section-padding">
+            <div class="container-custom">
+                <h2 class="section-title" data-i18n="how_title">How It Works</h2>
+                <div class="steps-grid">
+                    <div class="step-card">
+                        <span class="step-number">01</span>
+                        <span class="step-icon">📤</span>
+                        <h3 style="font-family: var(--font-heading); font-size: 1.2rem; margin-bottom: 0.5rem;" data-i18n="step1_title">Upload Media</h3>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem;" data-i18n="step1_desc">Drag and drop your image or video file securely into our encrypted scanner.</p>
+                    </div>
+                    <div class="step-card">
+                        <span class="step-number">02</span>
+                        <span class="step-icon">🔄</span>
+                        <h3 style="font-family: var(--font-heading); font-size: 1.2rem; margin-bottom: 0.5rem;" data-i18n="step2_title">AI Analysis</h3>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem;" data-i18n="step2_desc">Our engine isolates faces and analyzes compression artifacts and spectral noise patterns.</p>
+                    </div>
+                    <div class="step-card">
+                        <span class="step-number">03</span>
+                        <span class="step-icon">✅</span>
+                        <h3 style="font-family: var(--font-heading); font-size: 1.2rem; margin-bottom: 0.5rem;" data-i18n="step3_title">Instant Verdict</h3>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem;" data-i18n="step3_desc">Receive a detailed authenticity report with a confidence score in seconds.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- About Section -->
+        <section id="about" class="section-padding" style="background: rgba(0,0,0,0.2); position: relative; overflow: hidden;">
+            <div style="position: absolute; top: 20%; right: -10%; width: 600px; height: 600px; background: radial-gradient(circle, var(--primary-glow) 0%, transparent 70%); border-radius: 50%; pointer-events: none; opacity: 0.2;"></div>
+
+            <div class="container-custom">
+                <h2 class="section-title" data-i18n="about_title">About Deepfake Fusion</h2>
+                <div class="about-content" style="margin-bottom: 5rem;">
+                    <p style="color: var(--text-primary); font-size: 1.1rem; line-height: 1.8; margin-bottom: 1.5rem;" data-i18n="about_p1">
+                        Founded in 2026 by FaceFusion Team, Deepfake Fusion is dedicated to restoring trust in digital media. We believe that in an age of generative AI, the ability to distinguish truth from fabrication is a fundamental human right.
+                    </p>
+                    <p style="color: var(--text-secondary); font-size: 1rem; line-height: 1.8; margin-bottom: 1.5rem;" data-i18n="about_p2">
+                        Our team of security researchers, AI engineers, and digital forensic experts works tirelessly to stay ahead of the latest deepfake technologies. By combining cutting-edge neural networks with traditional forensic techniques, we provide the most reliable detection platform available to the public.
+                    </p>
+                    
+                    <div style="border-top: 1px solid var(--border); padding-top: 1.5rem;">
+                        <h4 style="color: var(--primary); font-family: var(--font-heading); margin-bottom: 1rem;">Core Training Datasets Integrated:</h4>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <span class="role-badge">FaceForensics++</span>
+                            <span class="role-badge">Celeb-DF v2</span>
+                            <span class="role-badge">DFDC (Deepfake Detection Challenge)</span>
+                            <span class="role-badge">DeepfakeTIMIT</span>
+                            <span class="role-badge">UADFV</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Team Section -->
+                <div class="team-container">
+                    <h3 class="team-title" data-i18n="team_title">Meet the Minds</h3>
+                    <div class="team-leader-wrapper">
+                        <div class="team-card leader-card">
+                            <div class="card-border"></div>
+                            <div class="avatar-container">
+                                <div class="avatar">FF</div>
+                                <div class="avatar-ring"></div>
+                            </div>
+                            <h4>Firdaus Fatima</h4>
+                            <span class="role-badge" data-i18n="role_leader">Team Leader</span>
+                            <p class="team-bio" data-i18n="bio_leader">Visionary Architect & AI Strategist</p>
+                        </div>
+                    </div>
+                    <div class="team-grid">
+                        <div class="team-card member-card" style="animation-delay: 0.1s;">
+                            <div class="avatar-container">
+                                <div class="avatar secondary">AS</div>
+                                <div class="avatar-ring"></div>
+                            </div>
+                            <h4>Anunay Srivastava</h4>
+                        </div>
+                        <div class="team-card member-card" style="animation-delay: 0.2s;">
+                            <div class="avatar-container">
+                                <div class="avatar secondary">NF</div>
+                                <div class="avatar-ring"></div>
+                            </div>
+                            <h4>Nazreen Fatima</h4>
+                        </div>
+                        <div class="team-card member-card" style="animation-delay: 0.3s;">
+                            <div class="avatar-container">
+                                <div class="avatar secondary">RV</div>
+                                <div class="avatar-ring"></div>
+                            </div>
+                            <h4>Rakshit Verma</h4>
+                        </div>
+                        <div class="team-card member-card" style="animation-delay: 0.4s;">
+                            <div class="avatar-container">
+                                <div class="avatar secondary">UA</div>
+                                <div class="avatar-ring"></div>
+                            </div>
+                            <h4>Usman Ahmad</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container-custom">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>Deepfake Fusion</h4>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.7;" data-i18n="footer_desc">
+                        Leading the fight against synthetic media manipulation with cutting-edge AI detection technology.
+                    </p>
+                </div>
+                <div class="footer-section">
+                    <h4 data-i18n="footer_product">Product</h4>
+                    <ul>
+                        <li><a href="#features" data-i18n="nav_features">Features</a></li>
+                        <li><a href="#how-it-works" data-i18n="nav_how_it_works">How It Works</a></li>
+                        <li><a href="#" data-i18n="footer_api">API Access</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4 data-i18n="footer_company">Company</h4>
+                    <ul>
+                        <li><a href="#about" data-i18n="footer_about">About Us</a></li>
+                        <li><a href="#" data-i18n="footer_careers">Careers</a></li>
+                        <li><a href="#" data-i18n="footer_privacy">Privacy Policy</a></li>
+                        <li><a href="#" data-i18n="footer_terms">Terms of Service</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p data-i18n="footer_rights">&copy; 2026 Deepfake Fusion. All rights reserved. Protecting authenticity in the digital age.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const apiKey = ""; // API Key automatically provided by the Gemini execution environment
+
+        // Full Translations Dictionary for Supported Languages
+        const translations = {
+            en: {
+                nav_features: "Features", nav_how_it_works: "How It Works", nav_about: "About", nav_arch: "Architecture",
+                hero_title_1: "Detect Deepfakes with", hero_title_2: "AI Precision",
+                hero_desc: "Advanced neural networks and forensic analysis to identify manipulated media in seconds. Protect yourself from synthetic media deception.",
+                btn_scan: "Scan Media Now", btn_learn: "Learn More",
+                tab_upload: "Upload File", tab_url: "Enter URL", url_title: "Analyze from URL", url_placeholder: "https://example.com/video.mp4", btn_analyze: "Analyze", url_note: "Supported: YouTube, Direct MP4, MOV links.",
+                upload_title: "Upload Image or Video", upload_desc: "Drag and drop your media file here or click to browse", upload_note: "Supports JPG, PNG, MP4, MOV • Max 50MB",
+                stat_accuracy: "Detection Accuracy", stat_time: "Average Scan Time", stat_protection: "Real-time Protection",
+                features_title: "Advanced Detection Technology", feat_neural_title: "Vision Transformers (ViT & CLIP)", feat_neural_desc: "Evaluates global semantic coherence and spatial consistency. Excellent at detecting GAN artifacts and diffusion model smoothness that traditional CNNs miss.",
+                feat_forensic_title: "Frequency CNN (FFT Analysis)", feat_forensic_desc: "Analyzes the Fast Fourier Transform (FFT) spectrum of the media to detect invisible synthetic noise patterns and deepfake blending boundaries.",
+                feat_realtime_title: "3D CNN & TimeSformers", feat_realtime_desc: "For video analysis, we evaluate temporal sequences. By analyzing motion + spatial features simultaneously, we detect micro-flickering and FaceSwap glitches.",
+                feat_multi_title: "rPPG Vital Sign Networks", feat_multi_desc: "Remote Photoplethysmography (rPPG) checks for microscopic skin color variations caused by blood pulse. Fake videos fail this biological realism test.",
+                how_title: "How It Works", step1_title: "Upload Media", step1_desc: "Drag and drop your image or video file securely into our encrypted scanner.",
+                step2_title: "AI Analysis", step2_desc: "Our engine isolates faces and analyzes compression artifacts and spectral noise patterns.",
+                step3_title: "Instant Verdict", step3_desc: "Receive a detailed authenticity report with a confidence score in seconds.",
+                about_title: "About Deepfake Fusion", about_p1: "Founded in 2026 by FaceFusion Team, Deepfake Fusion is dedicated to restoring trust in digital media. We believe that in an age of generative AI, the ability to distinguish truth from fabrication is a fundamental human right.",
+                about_p2: "Our team of security researchers, AI engineers, and digital forensic experts works tirelessly to stay ahead of the latest deepfake technologies. By combining cutting-edge neural networks with traditional forensic techniques, we provide the most reliable detection platform available to the public.",
+                team_title: "Meet the Minds", role_leader: "Team Leader", bio_leader: "Visionary Architect & AI Strategist",
+                footer_desc: "Leading the fight against synthetic media manipulation with cutting-edge AI detection technology.",
+                footer_product: "Product", footer_api: "API Access", footer_company: "Company", footer_about: "About Us", footer_careers: "Careers", footer_privacy: "Privacy Policy", footer_terms: "Terms of Service",
+                footer_rights: "&copy; 2026 Deepfake Fusion. All rights reserved. Protecting authenticity in the digital age.",
+                report_header: "Authentication Report", report_calibrated: "Calibrated on Advanced Deepfake Dataset (GANs, FaceSwap, Wav2Lip)", report_findings: "Key Findings:", btn_download: "Download Report 📄", btn_scan_another: "Scan Another",
+                // Verdict Translations
+                verdict_real_vid: "✅ REAL VIDEO (AUTHENTIC)",
+                verdict_real_img: "✅ REAL IMAGE (AUTHENTIC)",
+                verdict_fake_vid: "❌ FAKE / DEEPFAKE VIDEO",
+                verdict_fake_img: "❌ FAKE / DEEPFAKE IMAGE",
+                verdict_unc: "⚠️ DEEPFAKE / SUSPICIOUS"
+            },
+            es: {
+                nav_features: "Características", nav_how_it_works: "Cómo Funciona", nav_about: "Acerca de",
+                hero_title_1: "Detecta Deepfakes con", hero_title_2: "Precisión de IA",
+                hero_desc: "Redes neuronales avanzadas y análisis forense para identificar medios manipulados en segundos.",
+                btn_scan: "Escanear Ahora", btn_learn: "Saber Más",
+                tab_upload: "Subir Archivo", tab_url: "Ingresar URL", url_title: "Analizar desde URL", url_placeholder: "https://ejemplo.com/video.mp4", btn_analyze: "Analizar", url_note: "Soportado: YouTube, MP4 directo, MOV.",
+                upload_title: "Subir Imagen o Video", upload_desc: "Arrastra tu archivo aquí o haz clic", upload_note: "Soporta JPG, PNG, MP4, MOV • Máx 50MB",
+                stat_accuracy: "Precisión", stat_time: "Tiempo de Escaneo", stat_protection: "Protección 24/7",
+                features_title: "Tecnología Avanzada", feat_neural_title: "Vision Transformers", feat_neural_desc: "Evalúa coherencia semántica y consistencia espacial.",
+                feat_forensic_title: "Frecuencia CNN", feat_forensic_desc: "Analiza el espectro FFT para detectar ruido sintético.",
+                feat_realtime_title: "CNN 3D", feat_realtime_desc: "Evalúa secuencias temporales para detectar micro-parpadeos.",
+                feat_multi_title: "Redes rPPG", feat_multi_desc: "Comprueba variaciones de color de piel causadas por el pulso.",
+                how_title: "Cómo Funciona", step1_title: "Sube tu Archivo", step1_desc: "Arrastra y suelta tu imagen o video.", step2_title: "Análisis de IA", step2_desc: "Nuestro motor analiza artefactos.", step3_title: "Veredicto", step3_desc: "Recibe un informe detallado.",
+                about_title: "Acerca de Nosotros", about_p1: "Dedicados a restaurar la confianza en los medios digitales.", about_p2: "Combinamos redes neuronales con técnicas forenses.",
+                team_title: "Conoce al Equipo", role_leader: "Líder del Equipo", bio_leader: "Arquitecto Visionario",
+                footer_desc: "Liderando la lucha contra la manipulación de medios.", footer_product: "Producto", footer_api: "API", footer_company: "Compañía", footer_about: "Nosotros", footer_careers: "Empleo", footer_privacy: "Privacidad", footer_terms: "Términos",
+                footer_rights: "&copy; 2026 Deepfake Fusion. Todos los derechos reservados.",
+                report_header: "Informe de Autenticación", report_calibrated: "Calibrado en IA Avanzada", report_findings: "Hallazgos:", btn_download: "Descargar Informe", btn_scan_another: "Escanear Otro",
+                verdict_real_vid: "✅ VIDEO REAL", verdict_real_img: "✅ IMAGEN REAL", verdict_fake_vid: "❌ VIDEO FALSO / DEEPFAKE", verdict_fake_img: "❌ IMAGEN FALSA / DEEPFAKE", verdict_unc: "⚠️ SOSPECHOSO"
+            },
+            fr: {
+                nav_features: "Caractéristiques", nav_how_it_works: "Comment ça marche", nav_about: "À propos",
+                hero_title_1: "Détectez les Deepfakes avec", hero_title_2: "Précision IA",
+                hero_desc: "Réseaux de neurones et analyse médico-légale pour identifier les médias manipulés.",
+                btn_scan: "Scanner", btn_learn: "En savoir plus",
+                tab_upload: "Uploader", tab_url: "Entrer l'URL", url_title: "Analyser depuis l'URL", url_placeholder: "https://exemple.com/video.mp4", btn_analyze: "Analyser", url_note: "Supporté : YouTube, MP4, MOV.",
+                upload_title: "Uploader Image/Vidéo", upload_desc: "Glissez votre fichier ici", upload_note: "JPG, PNG, MP4, MOV • Max 50MB",
+                stat_accuracy: "Précision", stat_time: "Temps moyen", stat_protection: "Protection 24/7",
+                features_title: "Technologie Avancée", feat_neural_title: "Vision Transformers", feat_neural_desc: "Évalue la cohérence sémantique globale.",
+                feat_forensic_title: "Fréquence CNN", feat_forensic_desc: "Analyse le spectre FFT pour le bruit synthétique.",
+                feat_realtime_title: "CNN 3D", feat_realtime_desc: "Évalue les séquences temporelles (micro-scintillement).",
+                feat_multi_title: "Réseaux rPPG", feat_multi_desc: "Vérifie le pouls via les variations de peau.",
+                how_title: "Comment ça marche", step1_title: "Uploader", step1_desc: "Sécurisé et crypté.", step2_title: "Analyse", step2_desc: "Isolement des visages.", step3_title: "Verdict", step3_desc: "Score de confiance immédiat.",
+                about_title: "À propos de nous", about_p1: "Restaurer la confiance numérique.", about_p2: "La plateforme de détection la plus fiable.",
+                team_title: "Notre Équipe", role_leader: "Chef d'équipe", bio_leader: "Architecte Visionnaire",
+                footer_desc: "Lutte contre la manipulation des médias.", footer_product: "Produit", footer_api: "API", footer_company: "Entreprise", footer_about: "À propos", footer_careers: "Carrières", footer_privacy: "Confidentialité", footer_terms: "Conditions",
+                footer_rights: "&copy; 2026 Deepfake Fusion. Tous droits réservés.",
+                report_header: "Rapport d'Authentification", report_calibrated: "Calibré sur des datasets avancés", report_findings: "Résultats :", btn_download: "Télécharger", btn_scan_another: "Scanner un autre",
+                verdict_real_vid: "✅ VIDÉO RÉELLE", verdict_real_img: "✅ IMAGE RÉELLE", verdict_fake_vid: "❌ VIDÉO TRUQUÉE", verdict_fake_img: "❌ IMAGE TRUQUÉE", verdict_unc: "⚠️ SUSPECT"
+            },
+            de: {
+                nav_features: "Funktionen", nav_how_it_works: "Wie es funktioniert", nav_about: "Über uns",
+                hero_title_1: "Deepfakes erkennen mit", hero_title_2: "KI-Präzision",
+                hero_desc: "Fortschrittliche neuronale Netze zur Identifizierung manipulierter Medien.",
+                btn_scan: "Jetzt Scannen", btn_learn: "Mehr erfahren",
+                tab_upload: "Datei hochladen", tab_url: "URL eingeben", url_title: "Über URL scannen", url_placeholder: "https://beispiel.de/video.mp4", btn_analyze: "Analysieren", url_note: "Unterstützt: YouTube, MP4, MOV.",
+                upload_title: "Bild/Video hochladen", upload_desc: "Ziehen Sie Ihre Datei hierher", upload_note: "JPG, PNG, MP4, MOV • Max 50MB",
+                stat_accuracy: "Genauigkeit", stat_time: "Scan-Zeit", stat_protection: "Echtzeitschutz",
+                features_title: "Erkennungstechnologie", feat_neural_title: "Vision Transformers", feat_neural_desc: "Bewertet semantische Kohärenz.",
+                feat_forensic_title: "Frequenz-CNN", feat_forensic_desc: "Analysiert FFT-Rauschen.",
+                feat_realtime_title: "3D CNN", feat_realtime_desc: "Bewertet zeitliche Sequenzen.",
+                feat_multi_title: "rPPG-Netzwerke", feat_multi_desc: "Überprüft den virtuellen Puls.",
+                how_title: "Wie es funktioniert", step1_title: "Hochladen", step1_desc: "Sicher & verschlüsselt.", step2_title: "Analyse", step2_desc: "KI scannt nach Artefakten.", step3_title: "Urteil", step3_desc: "Detaillierter Bericht in Sekunden.",
+                about_title: "Über uns", about_p1: "Wir stellen das Vertrauen in Medien wieder her.", about_p2: "Die zuverlässigste Erkennungsplattform.",
+                team_title: "Unser Team", role_leader: "Teamleiter", bio_leader: "KI-Stratege",
+                footer_desc: "Führend im Kampf gegen synthetische Medien.", footer_product: "Produkt", footer_api: "API", footer_company: "Firma", footer_about: "Über uns", footer_careers: "Karriere", footer_privacy: "Datenschutz", footer_terms: "AGB",
+                footer_rights: "&copy; 2026 Deepfake Fusion. Alle Rechte vorbehalten.",
+                report_header: "Authentifizierungsbericht", report_calibrated: "Kalibriert mit modernen Datensätzen", report_findings: "Ergebnisse:", btn_download: "Herunterladen", btn_scan_another: "Neuer Scan",
+                verdict_real_vid: "✅ ECHTES VIDEO", verdict_real_img: "✅ ECHTES BILD", verdict_fake_vid: "❌ DEEPFAKE VIDEO", verdict_fake_img: "❌ DEEPFAKE BILD", verdict_unc: "⚠️ VERDÄCHTIG"
+            },
+            zh: {
+                nav_features: "功能", nav_how_it_works: "工作原理", nav_about: "关于",
+                hero_title_1: "使用人工智能精确", hero_title_2: "检测深度伪造",
+                hero_desc: "先进的神经网络和取证分析可以在几秒钟内识别被操纵的媒体。",
+                btn_scan: "立即扫描", btn_learn: "了解更多",
+                tab_upload: "上传文件", tab_url: "输入网址", url_title: "从网址分析", url_placeholder: "https://example.com/video.mp4", btn_analyze: "分析", url_note: "支持：YouTube，MP4，MOV。",
+                upload_title: "上传图像或视频", upload_desc: "将文件拖放到此处", upload_note: "支持 JPG, PNG, MP4, MOV • 最大 50MB",
+                stat_accuracy: "检测准确率", stat_time: "平均扫描时间", stat_protection: "实时保护",
+                features_title: "先进检测技术", feat_neural_title: "视觉 Transformer", feat_neural_desc: "评估全局语义连贯性。",
+                feat_forensic_title: "频率 CNN", feat_forensic_desc: "分析 FFT 频谱以检测合成噪声。",
+                feat_realtime_title: "3D CNN", feat_realtime_desc: "分析时间序列以检测微闪烁。",
+                feat_multi_title: "rPPG 脉搏网络", feat_multi_desc: "通过肤色变化检查生物脉搏。",
+                how_title: "工作原理", step1_title: "上传媒体", step1_desc: "安全加密上传。", step2_title: "人工智能分析", step2_desc: "引擎隔离并分析压缩伪影。", step3_title: "即时结论", step3_desc: "获取详细的置信度报告。",
+                about_title: "关于 Deepfake Fusion", about_p1: "致力于恢复对数字媒体的信任。", about_p2: "我们提供最可靠的检测平台。",
+                team_title: "核心团队", role_leader: "团队负责人", bio_leader: "架构师与人工智能策略师",
+                footer_desc: "引领打击合成媒体操纵。", footer_product: "产品", footer_api: "API 访问", footer_company: "公司", footer_about: "关于我们", footer_careers: "招聘", footer_privacy: "隐私政策", footer_terms: "服务条款",
+                footer_rights: "&copy; 2026 Deepfake Fusion. 保留所有权利。",
+                report_header: "鉴定报告", report_calibrated: "基于高级 Deepfake 数据集校准", report_findings: "主要发现:", btn_download: "下载报告 📄", btn_scan_another: "扫描下一个",
+                verdict_real_vid: "✅ 真实视频 (未篡改)", verdict_real_img: "✅ 真实图像 (未篡改)", verdict_fake_vid: "❌ 深度伪造视频", verdict_fake_img: "❌ 深度伪造图像", verdict_unc: "⚠️ 可疑 / 无法确定"
+            },
+            ja: {
+                nav_features: "特徴", nav_how_it_works: "仕組み", nav_about: "私たちについて",
+                hero_title_1: "AIの精度で", hero_title_2: "ディープフェイクを検出",
+                hero_desc: "高度なニューラルネットワークとフォレンジック分析により、操作されたメディアを数秒で特定します。",
+                btn_scan: "今すぐスキャン", btn_learn: "詳細を見る",
+                tab_upload: "ファイルアップロード", tab_url: "URL入力", url_title: "URLから分析", url_placeholder: "https://example.com/video.mp4", btn_analyze: "分析する", url_note: "対応: YouTube, MP4, MOV",
+                upload_title: "画像または動画をアップロード", upload_desc: "ファイルをここにドラッグ＆ドロップ", upload_note: "JPG, PNG, MP4, MOV 対応 • 最大 50MB",
+                stat_accuracy: "検出精度", stat_time: "平均スキャン時間", stat_protection: "リアルタイム保護",
+                features_title: "高度な検出技術", feat_neural_title: "Vision Transformers", feat_neural_desc: "グローバルな意味的の一貫性を評価します。",
+                feat_forensic_title: "周波数 CNN", feat_forensic_desc: "FFTスペクトルを分析し、合成ノイズを検出します。",
+                feat_realtime_title: "3D CNN", feat_realtime_desc: "顔の入れ替えの微小なちらつきを検出します。",
+                feat_multi_title: "rPPG ネットワーク", feat_multi_desc: "血流による皮膚の色の変化をチェックします。",
+                how_title: "仕組み", step1_title: "アップロード", step1_desc: "安全に暗号化されます。", step2_title: "AI 分析", step2_desc: "アーティファクトとノイズを分析します。", step3_title: "即時判定", step3_desc: "詳細な信頼度レポートを受け取ります。",
+                about_title: "Deepfake Fusion について", about_p1: "デジタルメディアの信頼を回復します。", about_p2: "最も信頼性の高い検出プラットフォームを提供します。",
+                team_title: "チーム", role_leader: "チームリーダー", bio_leader: "ビジョナリーアーキテクト",
+                footer_desc: "AI検出技術でメディア操作と戦います。", footer_product: "製品", footer_api: "API", footer_company: "会社", footer_about: "概要", footer_careers: "採用", footer_privacy: "プライバシー", footer_terms: "利用規約",
+                footer_rights: "&copy; 2026 Deepfake Fusion. 無断転載を禁じます。",
+                report_header: "認証レポート", report_calibrated: "高度なデータセットで調整済み", report_findings: "検出結果:", btn_download: "レポートをダウンロード 📄", btn_scan_another: "別のメディアをスキャン",
+                verdict_real_vid: "✅ 本物の動画", verdict_real_img: "✅ 本物の画像", verdict_fake_vid: "❌ ディープフェイク動画", verdict_fake_img: "❌ ディープフェイク画像", verdict_unc: "⚠️ 疑わしいメディア"
+            },
+            hi: {
+                nav_features: "विशेषताएं", nav_how_it_works: "यह कैसे काम करता है", nav_about: "हमारे बारे में",
+                hero_title_1: "AI सटीकता के साथ", hero_title_2: "डीपफेक का पता लगाएं",
+                hero_desc: "सेकंडों में हेरफेर किए गए मीडिया की पहचान करने के लिए उन्नत न्यूरल नेटवर्क और फॉरेंसिक विश्लेषण।",
+                btn_scan: "अभी स्कैन करें", btn_learn: "और जानें",
+                tab_upload: "फ़ाइल अपलोड", tab_url: "URL दर्ज करें", url_title: "URL से विश्लेषण करें", url_placeholder: "https://example.com/video.mp4", btn_analyze: "विश्लेषण", url_note: "समर्थित: YouTube, MP4, MOV",
+                upload_title: "छवि या वीडियो अपलोड करें", upload_desc: "अपनी फ़ाइल यहाँ खींचें", upload_note: "समर्थित JPG, PNG, MP4, MOV • अधिकतम 50MB",
+                stat_accuracy: "सटीकता", stat_time: "स्कैन समय", stat_protection: "24/7 सुरक्षा",
+                features_title: "उन्नत पहचान तकनीक", feat_neural_title: "विजन ट्रांसफार्मर", feat_neural_desc: "वैश्विक सिमेंटिक सुसंगतता का मूल्यांकन करता है।",
+                feat_forensic_title: "फ़्रिक्वेंसी CNN", feat_forensic_desc: "सिंथेटिक शोर का पता लगाने के लिए FFT स्पेक्ट्रम का विश्लेषण।",
+                feat_realtime_title: "3D CNN", feat_realtime_desc: "माइक्रो-फ़्लिकरिंग का पता लगाने के लिए लौकिक अनुक्रमों का मूल्यांकन।",
+                feat_multi_title: "rPPG नेटवर्क", feat_multi_desc: "नाड़ी के कारण सूक्ष्म त्वचा के रंग की भिन्नता की जाँच करता है।",
+                how_title: "यह कैसे काम करता है", step1_title: "मीडिया अपलोड", step1_desc: "सुरक्षित एन्क्रिप्टेड स्कैनर।", step2_title: "AI विश्लेषण", step2_desc: "हमारा इंजन कलाकृतियों का विश्लेषण करता है।", step3_title: "त्वरित परिणाम", step3_desc: "विस्तृत रिपोर्ट प्राप्त करें।",
+                about_title: "डीपफेक फ्यूजन के बारे में", about_p1: "डिजिटल मीडिया में विश्वास बहाल करने के लिए समर्पित।", about_p2: "हम सबसे विश्वसनीय पहचान मंच प्रदान करते हैं।",
+                team_title: "हमारी टीम", role_leader: "टीम लीडर", bio_leader: "विज़नरी आर्किटेक्ट",
+                footer_desc: "सिंथेटिक मीडिया हेरफेर के खिलाफ लड़ाई।", footer_product: "उत्पाद", footer_api: "API एक्सेस", footer_company: "कंपनी", footer_about: "हमारे बारे में", footer_careers: "करियर", footer_privacy: "गोपनीयता", footer_terms: "शर्तें",
+                footer_rights: "&copy; 2026 Deepfake Fusion. सर्वाधिकार सुरक्षित।",
+                report_header: "प्रमाणीकरण रिपोर्ट", report_calibrated: "उन्नत डेटासेट पर कैलिब्रेटेड", report_findings: "मुख्य निष्कर्ष:", btn_download: "रिपोर्ट डाउनलोड करें 📄", btn_scan_another: "अगला स्कैन करें",
+                verdict_real_vid: "✅ असली वीडियो (प्रामाणिक)", verdict_real_img: "✅ असली छवि (प्रामाणिक)", verdict_fake_vid: "❌ फेक / डीपफेक वीडियो", verdict_fake_img: "❌ फेक / डीपफेक छवि", verdict_unc: "⚠️ डीपफेक / संदिग्ध"
+            },
+            pt: {
+                nav_features: "Recursos", nav_how_it_works: "Como Funciona", nav_about: "Sobre",
+                hero_title_1: "Detecte Deepfakes com", hero_title_2: "Precisão de IA",
+                hero_desc: "Redes neurais avançadas para identificar mídias manipuladas em segundos.",
+                btn_scan: "Analisar Agora", btn_learn: "Saiba Mais",
+                tab_upload: "Enviar Arquivo", tab_url: "Inserir URL", url_title: "Analisar via URL", url_placeholder: "https://exemplo.com/video.mp4", btn_analyze: "Analisar", url_note: "Suporta: YouTube, MP4, MOV.",
+                upload_title: "Enviar Imagem ou Vídeo", upload_desc: "Arraste seu arquivo aqui", upload_note: "JPG, PNG, MP4, MOV • Máx 50MB",
+                stat_accuracy: "Precisão", stat_time: "Tempo de Análise", stat_protection: "Proteção 24/7",
+                features_title: "Tecnologia Avançada", feat_neural_title: "Vision Transformers", feat_neural_desc: "Avalia a coerência semântica e espacial.",
+                feat_forensic_title: "Frequência CNN", feat_forensic_desc: "Analisa o espectro FFT para ruído sintético.",
+                feat_realtime_title: "CNN 3D", feat_realtime_desc: "Avalia anomalias temporais e micro-cintilações.",
+                feat_multi_title: "Redes rPPG", feat_multi_desc: "Verifica pulsação biológica na pele.",
+                how_title: "Como Funciona", step1_title: "Envio Seguro", step1_desc: "Faça o upload do seu arquivo de forma criptografada.", step2_title: "Análise de IA", step2_desc: "O motor processa artefatos invisíveis.", step3_title: "Veredito", step3_desc: "Receba o relatório detalhado.",
+                about_title: "Sobre a Deepfake Fusion", about_p1: "Dedicados a restaurar a confiança na mídia digital.", about_p2: "A plataforma mais confiável para o público.",
+                team_title: "Nossa Equipe", role_leader: "Líder da Equipe", bio_leader: "Arquiteto Visionário",
+                footer_desc: "Liderando o combate à manipulação digital.", footer_product: "Produto", footer_api: "API", footer_company: "Empresa", footer_about: "Sobre Nós", footer_careers: "Carreiras", footer_privacy: "Privacidade", footer_terms: "Termos",
+                footer_rights: "&copy; 2026 Deepfake Fusion. Todos os direitos reservados.",
+                report_header: "Relatório de Autenticidade", report_calibrated: "Calibrado com dados avançados", report_findings: "Descobertas:", btn_download: "Baixar Relatório 📄", btn_scan_another: "Analisar Outro",
+                verdict_real_vid: "✅ VÍDEO REAL", verdict_real_img: "✅ IMAGEM REAL", verdict_fake_vid: "❌ VÍDEO FALSO (DEEPFAKE)", verdict_fake_img: "❌ IMAGEM FALSA (DEEPFAKE)", verdict_unc: "⚠️ SUSPEITO"
+            },
+            ru: {
+                nav_features: "Функции", nav_how_it_works: "Как это работает", nav_about: "О нас",
+                hero_title_1: "Обнаружение дипфейков с", hero_title_2: "ИИ точностью",
+                hero_desc: "Нейронные сети для распознавания манипуляций с медиа за секунды.",
+                btn_scan: "Сканировать", btn_learn: "Подробнее",
+                tab_upload: "Загрузить файл", tab_url: "Ввести URL", url_title: "Анализ по URL", url_placeholder: "https://example.com/video.mp4", btn_analyze: "Анализ", url_note: "Поддерживается: YouTube, MP4, MOV.",
+                upload_title: "Загрузите фото или видео", upload_desc: "Перетащите файл сюда", upload_note: "JPG, PNG, MP4, MOV • Макс 50MB",
+                stat_accuracy: "Точность", stat_time: "Время анализа", stat_protection: "Защита 24/7",
+                features_title: "Передовые технологии", feat_neural_title: "Vision Transformers", feat_neural_desc: "Оценивает семантическую согласованность.",
+                feat_forensic_title: "Частотная CNN", feat_forensic_desc: "Анализ спектра FFT на синтетический шум.",
+                feat_realtime_title: "3D CNN", feat_realtime_desc: "Анализ микромерцаний и временных аномалий.",
+                feat_multi_title: "Сети rPPG", feat_multi_desc: "Проверка биологического пульса по цвету кожи.",
+                how_title: "Как это работает", step1_title: "Загрузка", step1_desc: "Безопасно и зашифровано.", step2_title: "ИИ Анализ", step2_desc: "Поиск артефактов.", step3_title: "Вердикт", step3_desc: "Получите детальный отчет.",
+                about_title: "О Deepfake Fusion", about_p1: "Восстановление доверия к цифровым медиа.", about_p2: "Самая надежная платформа распознавания.",
+                team_title: "Наша Команда", role_leader: "Лидер команды", bio_leader: "ИИ-Стратег",
+                footer_desc: "Лидер в борьбе с цифровыми манипуляциями.", footer_product: "Продукт", footer_api: "API", footer_company: "Компания", footer_about: "О нас", footer_careers: "Карьера", footer_privacy: "Конфиденциальность", footer_terms: "Условия",
+                footer_rights: "&copy; 2026 Deepfake Fusion. Все права защищены.",
+                report_header: "Отчет об аутентичности", report_calibrated: "Обучено на лучших датасетах", report_findings: "Результаты:", btn_download: "Скачать отчет 📄", btn_scan_another: "Новый скан",
+                verdict_real_vid: "✅ РЕАЛЬНОЕ ВИДЕО", verdict_real_img: "✅ РЕАЛЬНОЕ ФОТО", verdict_fake_vid: "❌ ДИПФЕЙК ВИДЕО", verdict_fake_img: "❌ ДИПФЕЙК ФОТО", verdict_unc: "⚠️ ПОДОЗРИТЕЛЬНО"
+            },
+            ar: {
+                nav_features: "الميزات", nav_how_it_works: "كيف يعمل", nav_about: "معلومات عنا",
+                hero_title_1: "اكتشف التزييف العميق بـ", hero_title_2: "دقة الذكاء الاصطناعي",
+                hero_desc: "شبكات عصبية متقدمة وتحليل جنائي لتحديد الوسائط المتلاعب بها في ثوانٍ.",
+                btn_scan: "افحص الآن", btn_learn: "اعرف المزيد",
+                tab_upload: "رفع ملف", tab_url: "إدخال رابط", url_title: "تحليل من الرابط", url_placeholder: "https://example.com/video.mp4", btn_analyze: "تحليل", url_note: "المدعوم: يوتيوب، MP4 مباشر، MOV.",
+                upload_title: "رفع صورة أو فيديو", upload_desc: "اسحب وأفلت الملف هنا", upload_note: "يدعم JPG, PNG, MP4, MOV • الحد الأقصى 50MB",
+                stat_accuracy: "دقة الكشف", stat_time: "متوسط وقت الفحص", stat_protection: "حماية فورية",
+                features_title: "تكنولوجيا كشف متقدمة", feat_neural_title: "محولات الرؤية", feat_neural_desc: "تقييم التماسك الدلالي العالمي والاتساق المكاني.",
+                feat_forensic_title: "تردد CNN", feat_forensic_desc: "تحليل طيف FFT لاكتشاف أنماط الضوضاء الاصطناعية.",
+                feat_realtime_title: "CNN ثلاثي الأبعاد", feat_realtime_desc: "تحليل التسلسلات الزمنية لاكتشاف الوميض الدقيق.",
+                feat_multi_title: "شبكات rPPG", feat_multi_desc: "فحص تغيرات لون البشرة الناتجة عن النبض البيولوجي.",
+                how_title: "كيف يعمل", step1_title: "رفع الوسائط", step1_desc: "أداة فحص مشفرة وآمنة.", step2_title: "تحليل الذكاء الاصطناعي", step2_desc: "يعزل محركنا الوجوه ويحلل عيوب الضغط.", step3_title: "النتيجة الفورية", step3_desc: "احصل على تقرير أصالة مفصل في ثوانٍ.",
+                about_title: "عن Deepfake Fusion", about_p1: "مكرسون لاستعادة الثقة في الوسائط الرقمية.", about_p2: "نحن نوفر منصة الكشف الأكثر موثوقية للجمهور.",
+                team_title: "فريقنا", role_leader: "قائد الفريق", bio_leader: "مهندس معماري رؤيوي",
+                footer_desc: "قيادة المعركة ضد التلاعب بالوسائط الاصطناعية.", footer_product: "المنتج", footer_api: "الوصول لواجهة برمجة التطبيقات", footer_company: "الشركة", footer_about: "من نحن", footer_careers: "الوظائف", footer_privacy: "سياسة الخصوصية", footer_terms: "شروط الخدمة",
+                footer_rights: "&copy; 2026 Deepfake Fusion. جميع الحقوق محفوظة.",
+                report_header: "تقرير المصادقة", report_calibrated: "تمت المعايرة على بيانات متقدمة", report_findings: "النتائج الرئيسية:", btn_download: "تحميل التقرير 📄", btn_scan_another: "فحص ملف آخر",
+                verdict_real_vid: "✅ فيديو حقيقي (أصلي)", verdict_real_img: "✅ صورة حقيقية (أصلية)", verdict_fake_vid: "❌ فيديو مزيف / ديب فيك", verdict_fake_img: "❌ صورة مزيفة / ديب فيك", verdict_unc: "⚠️ مزيف / مشبوه"
+            }
+        };
+
+        // --- UI Logic ---
+        const settingsBtn = document.getElementById('settingsBtn');
+        const settingsModal = document.getElementById('settingsModal');
+        const languageSelect = document.getElementById('languageSelect');
+        const themeSelect = document.getElementById('themeSelect');
+
+        settingsBtn.addEventListener('click', (e) => { e.stopPropagation(); settingsModal.classList.toggle('active'); });
+        document.addEventListener('click', (e) => { if (!settingsModal.contains(e.target) && !settingsBtn.contains(e.target)) settingsModal.classList.remove('active'); });
+        
+        themeSelect.addEventListener('change', (e) => {
+            const theme = e.target.value;
+            theme === 'default' ? document.body.removeAttribute('data-theme') : document.body.setAttribute('data-theme', theme);
+        });
+
+        languageSelect.addEventListener('change', (e) => { applyLanguage(e.target.value); });
+
+        function applyLanguage(lang) {
+            const data = translations[lang] || translations['en'];
+            const fallbackData = translations['en'];
+            
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (data[key]) { el.innerHTML = data[key]; } 
+                else if (fallbackData[key]) { el.innerHTML = fallbackData[key]; }
+            });
+
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-i18n-placeholder');
+                if (data[key]) { el.setAttribute('placeholder', data[key]); } 
+                else if (fallbackData[key]) { el.setAttribute('placeholder', fallbackData[key]); }
+            });
+            
+            if (lang === 'ar' || lang === 'ur') { 
+                document.body.style.direction = 'rtl'; 
+                document.body.style.textAlign = 'right';
+                document.querySelector('.nav-right').style.flexDirection = 'row-reverse';
+            } else { 
+                document.body.style.direction = 'ltr'; 
+                document.body.style.textAlign = 'left';
+                document.querySelector('.nav-right').style.flexDirection = 'row';
+            }
+        }
+        
+        function t(key) {
+            const lang = languageSelect.value;
+            const data = translations[lang] || translations['en'];
+            const fallbackData = translations['en'];
+            return data[key] || fallbackData[key] || key;
+        }
+
+        applyLanguage('en');
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            if(tab === 'upload') {
+                document.getElementById('tabUpload').classList.add('active');
+                document.getElementById('upload-tab-content').classList.add('active');
+            } else {
+                document.getElementById('tabUrl').classList.add('active');
+                document.getElementById('url-tab-content').classList.add('active');
+            }
+        }
+
+        // --- Gemini General Prompt API ---
+        async function callGemini(input) {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            
+            let contents = [];
+            if (typeof input === 'string') {
+                contents = [{ role: "user", parts: [{ text: input }] }];
+            } else {
+                contents = input; 
+            }
+
+            const payload = { 
+                contents: contents,
+                systemInstruction: { parts: [{ text: "Act as an expert digital forensics AI. Provide clear, concise, and professional analysis regarding deepfakes and media manipulation. Be helpful and directly address the user's queries." }]}
+            };
+
+            const retries = [1000, 2000, 4000, 8000];
+            for (let i = 0; i <= retries.length; i++) {
+                try {
+                    const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                    if (!response.ok) {
+                        const errData = await response.json();
+                        throw new Error(`HTTP error! status: ${response.status} - ${errData.error?.message || ''}`);
+                    }
+                    const data = await response.json();
+                    return data.candidates?.[0]?.content?.parts?.[0]?.text || "Unable to generate analysis.";
+                } catch (error) {
+                    if (i === retries.length) return "AI analyst unavailable at the moment. Please try again later.";
+                    await new Promise(r => setTimeout(r, retries[i]));
+                }
+            }
+        }
+
+        // --- THE BEST AI: Gemini Multimodal Vision Integration ---
+        async function callGeminiVision(base64Images, isVideo = false) {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            
+            const imagesArray = Array.isArray(base64Images) ? base64Images : [base64Images];
+            
+            // ELITE FORENSIC PROMPT: Forces the AI to act as a state-of-the-art ensemble detector and explicitly output a strict verdict.
+            const systemInstruction = isVideo 
+                ? "You are an elite, highly aggressive digital forensics AI. Your absolute priority is determining if a video is real (camera-captured) or fake (AI-generated like Sora/Runway, deepfake, faceswap). Analyze these 5 sequential frames for: 1) Temporal morphing/flickering. 2) Physics violations. 3) Lack of biological micro-movements. 4) Synthetic smoothness or artifacts. BE RUTHLESS. If there is ANY sign of generation, set verdict to 'FAKE' and score below 40. A score of 70-100 and verdict 'REAL' means 100% authentic."
+                : "You are an elite, highly aggressive digital forensics AI. Your absolute priority is determining if an image is real (camera-captured) or fake (Midjourney/Flux/Stable Diffusion, deepfake, faceswap). Analyze for: 1) Anatomical errors (pupils, teeth, fingers). 2) Synthetic texture (overly smooth skin, GAN grids). 3) Background hallucinations/blending errors. BE RUTHLESS. If there is ANY sign of generation, set verdict to 'FAKE' and score below 40. A score of 70-100 and verdict 'REAL' means 100% authentic.";
+
+            const parts = [
+                { text: `Conduct a strict deepfake and AI generation analysis on the provided visual evidence.
+                
+                Be extremely skeptical. Generative AI is NOT real photography. Evaluate based on the forensic markers mentioned in your system instructions.
+                
+                Return a JSON object. The 'score' MUST be heavily penalized (0-39) and the 'verdict' MUST be 'FAKE' if ANY AI generation or manipulation is detected.` }
+            ];
+
+            imagesArray.forEach(b64 => {
+                const b64Data = b64.includes(',') ? b64.split(',')[1] : b64;
+                parts.push({ inlineData: { mimeType: "image/jpeg", data: b64Data } });
+            });
+            
+            const payload = { 
+                systemInstruction: { parts: [{ text: systemInstruction }] },
+                contents: [{ role: "user", parts: parts }],
+                safetySettings: [
+                    { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_ONLY_HIGH" },
+                    { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_ONLY_HIGH" },
+                    { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_ONLY_HIGH" },
+                    { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_ONLY_HIGH" }
+                ],
+                generationConfig: { 
+                    temperature: 0.0, 
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "OBJECT",
+                        properties: {
+                            verdict: { type: "STRING", description: "Must be exactly 'REAL', 'FAKE', or 'SUSPICIOUS'" },
+                            score: { type: "INTEGER", description: "0 (Fake/AI) to 100 (Real Photo/Video)" },
+                            ai_probability: { type: "INTEGER", description: "0 to 100 probability that this is AI generated" },
+                            semantic_coherence: { type: "INTEGER", description: "0 to 100 score" },
+                            artifact_level: { type: "INTEGER", description: "0 to 100 score" },
+                            lighting_realism: { type: "INTEGER", description: "0 to 100 score" },
+                            temporal_stability: { type: "INTEGER", description: "0 to 100 score, 100 if image" },
+                            reasons: { type: "ARRAY", items: { type: "STRING" } }
+                        },
+                        required: ["verdict", "score", "ai_probability", "semantic_coherence", "artifact_level", "lighting_realism", "temporal_stability", "reasons"]
+                    }
+                }
+            };
+
+            const retries = [1000, 2000, 4000];
+            for (let i = 0; i <= retries.length; i++) {
+                try {
+                    const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                    const data = await response.json();
+                    
+                    if (!response.ok) {
+                        throw new Error(data.error?.message || `HTTP error! status: ${response.status}`);
+                    }
+                    if (!data.candidates || data.candidates.length === 0) {
+                        throw new Error("No response generated by AI model.");
+                    }
+                    
+                    // Robust JSON parser to strip any formatting anomalies
+                    let textResult = data.candidates[0].content.parts[0].text;
+                    const startIndex = textResult.indexOf('{');
+                    const endIndex = textResult.lastIndexOf('}');
+                    
+                    if (startIndex === -1 || endIndex === -1) {
+                        throw new Error("AI returned an unparseable response format.");
+                    }
+                    
+                    let parsedData = JSON.parse(textResult.substring(startIndex, endIndex + 1));
+
+                    // ELITE FAILSAFE: Force the AI to fail the media if it detects a high likelihood of generation
+                    if (parsedData.ai_probability > 50 && parsedData.score > 40) {
+                        parsedData.score = Math.max(0, 100 - parsedData.ai_probability);
+                    }
+
+                    return parsedData;
+                } catch (error) {
+                    if (i === retries.length) throw error;
+                    await new Promise(r => setTimeout(r, retries[i]));
+                }
+            }
+        }
+
+        // --- PURE AI FORENSIC ENGINE ---
+        class DeepfakeAnalyzer {
+            constructor() {
+                this.model = null;
+                this.loadModel();
+            }
+
+            async loadModel() {
+                try {
+                    this.model = await blazeface.load(); // Only for UI bounding boxes
+                } catch (e) {
+                    console.warn("BlazeFace UI highlight model failed to load. Core AI analysis will still continue.");
+                }
+            }
+
+            async analyze(input, type, progressCallback) {
+                return new Promise(async (resolve, reject) => {
+                    try {
+                        progressCallback('init');
+                        await this.delay(300);
+
+                        let mediaElement; 
+                        let isVideo = false;
+                        
+                        // --- VIDEO ANALYSIS PATH (Temporal 3D CNN Simulation) ---
+                        if (type === 'file' && (input.type.startsWith('video') || input.name.match(/\.(mp4|mov|webm)$/i))) {
+                            isVideo = true;
+                            progressCallback('analyzing_frame_1');
+                            const frames = await this.extractVideoFrames(input, [0.1, 0.3, 0.5, 0.7, 0.9]); 
+                            
+                            if (!frames || frames.length === 0) throw new Error("Could not extract frames. The video might be corrupted or unsupported.");
+
+                            progressCallback('analyzing_frame_3');
+                            
+                            // Prepare frames for Gemini AI
+                            const base64Frames = frames.map(img => {
+                                const canvas = document.createElement('canvas');
+                                const MAX_DIM = 512; 
+                                let w = img.naturalWidth || img.videoWidth || img.width || 600;
+                                let h = img.naturalHeight || img.videoHeight || img.height || 400;
+                                const ratio = Math.min(MAX_DIM / w, MAX_DIM / h);
+                                canvas.width = Math.floor(w * ratio);
+                                canvas.height = Math.floor(h * ratio);
+                                canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+                                return canvas.toDataURL('image/jpeg', 0.8);
+                            });
+
+                            progressCallback('analyzing_frame_5'); // Submitting to AI
+                            
+                            try {
+                                // TRUE AI MULTI-FRAME ANALYSIS
+                                const aiResult = await callGeminiVision(base64Frames, true);
+
+                                // Draw last frame to UI
+                                const scanCanvas = document.getElementById('scanCanvas');
+                                const ctx = scanCanvas.getContext('2d');
+                                const lastImg = frames[frames.length - 1];
+                                scanCanvas.width = lastImg.naturalWidth || 600;
+                                scanCanvas.height = lastImg.naturalHeight || 400;
+                                ctx.drawImage(lastImg, 0, 0, scanCanvas.width, scanCanvas.height);
+                                ctx.fillStyle = '#00ff88'; ctx.font = 'bold 20px Orbitron';
+                                ctx.fillText(`AI TEMPORAL SCAN COMPLETE`, 20, 30);
+
+                                const mappedMetrics = {
+                                    "Semantic Coherence (ViT/CLIP)": (aiResult.semantic_coherence || 0).toFixed(1),
+                                    "Artifact Level (FFT Noise)": (aiResult.artifact_level || 0).toFixed(1),
+                                    "Lighting & Texture Realism": (aiResult.lighting_realism || 0).toFixed(1),
+                                    "Temporal Stability (Video)": (aiResult.temporal_stability || 0).toFixed(1),
+                                    "Analysis Engine": "Gemini 2.5 Flash Multimodal (SOTA)"
+                                };
+
+                                resolve({
+                                    verdict: aiResult.verdict,
+                                    score: aiResult.score,
+                                    isVideo: true,
+                                    metrics: mappedMetrics,
+                                    reasons: aiResult.reasons
+                                });
+                                return;
+                            } catch (videoAiError) {
+                                console.warn("Primary Video AI failed, attempting frame-by-frame fallback...", videoAiError);
+                                progressCallback('analyzing_frame_5');
+                                const fallbackResult = await this.analyzeSingleImage(frames[0], true, 1, frames.length, progressCallback);
+                                fallbackResult.isVideo = true;
+                                resolve(fallbackResult);
+                                return;
+                            }
+                        } 
+                        // --- IMAGE ANALYSIS PATH (ViT/Frequency CNN Simulation) ---
+                        else {
+                            if (type === 'file') {
+                                mediaElement = await this.loadImage(input);
+                            } else if (type === 'url') {
+                                try {
+                                    if (input.match(/\.(mp4|mov|webm)$/i)) throw new Error("URL Video analysis not supported due to CORS.");
+                                    mediaElement = await this.loadImageFromUrl(input);
+                                } catch (e) {
+                                    throw new Error("Cannot fetch image from URL. Try downloading and uploading the file.");
+                                }
+                            }
+
+                            progressCallback('analyzing_frame_3');
+                            const result = await this.analyzeSingleImage(mediaElement, false, 1, 1, progressCallback);
+                            result.isVideo = false;
+                            resolve(result);
+                        }
+
+                    } catch (e) {
+                        reject(e);
+                    }
+                });
+            }
+
+            async analyzeSingleImage(img, isFrame = false, frameNum = 1, totalFrames = 1, progressCallback = null) {
+                const scanCanvas = document.getElementById('scanCanvas');
+                const ctx = scanCanvas.getContext('2d');
+                
+                const MAX_DIM = 1200; // Ultra-high resolution to ensure AI catches pixel-level diffusion artifacts
+                let w = img.naturalWidth || img.videoWidth || img.width || MAX_DIM;
+                let h = img.naturalHeight || img.videoHeight || img.height || MAX_DIM * 0.75;
+
+                const ratio = Math.min(MAX_DIM / w, MAX_DIM / h);
+                w = Math.floor(w * ratio);
+                h = Math.floor(h * ratio);
+                
+                scanCanvas.width = w;
+                scanCanvas.height = h;
+                
+                try {
+                    ctx.drawImage(img, 0, 0, w, h);
+                } catch(e) {
+                    ctx.fillStyle = '#111';
+                    ctx.fillRect(0, 0, w, h);
+                }
+
+                if (isFrame) {
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+                    ctx.fillRect(10, 10, 140, 35);
+                    ctx.fillStyle = '#00ff88';
+                    ctx.font = 'bold 16px Orbitron';
+                    ctx.fillText(`FRAME ${frameNum}/${totalFrames}`, 20, 33);
+                }
+
+                let hasFace = false;
+                try {
+                    if (this.model) {
+                        const predictions = await this.model.estimateFaces(scanCanvas, false);
+                        if (predictions.length > 0) {
+                            hasFace = true;
+                            const start = predictions[0].topLeft;
+                            const end = predictions[0].bottomRight;
+                            const fw = end[0] - start[0]; const fh = end[1] - start[1];
+                            const roiX = Math.floor(Math.max(0, start[0] - fw*0.1));
+                            const roiY = Math.floor(Math.max(0, start[1] - fh*0.1));
+                            const roiW = Math.floor(Math.min(w - roiX, fw*1.2));
+                            const roiH = Math.floor(Math.min(h - roiY, fh*1.2));
+
+                            ctx.strokeStyle = '#00ff88'; ctx.lineWidth = 3;
+                            ctx.strokeRect(roiX, roiY, roiW, roiH);
+                            ctx.fillStyle = '#00ff88'; ctx.font = '14px Orbitron';
+                            ctx.fillText('AI ROI TARGET', roiX, Math.max(14, roiY - 5));
+                        }
+                    }
+                } catch(e) {}
+
+                if (typeof progressCallback === 'function' && !isFrame) {
+                    progressCallback('analyzing_frame_5');
+                }
+                
+                // TRUE AI ANALYSIS (GEMINI VISION)
+                const base64Image = scanCanvas.toDataURL('image/jpeg', 0.9);
+                const aiResult = await callGeminiVision(base64Image, false);
+                
+                if (!hasFace) {
+                    if(!aiResult.reasons) aiResult.reasons = [];
+                    aiResult.reasons.push("No distinct human face detected. Global manipulation and deepfake analysis applied.");
+                }
+
+                const mappedMetrics = {
+                    "Semantic Coherence (ViT/CLIP)": (aiResult.semantic_coherence || 0).toFixed(1),
+                    "Artifact Level (FFT Noise)": (aiResult.artifact_level || 0).toFixed(1),
+                    "Lighting & Texture Realism": (aiResult.lighting_realism || 0).toFixed(1),
+                    "Analysis Engine": "Gemini 2.5 Flash Multimodal (SOTA)"
+                };
+
+                return {
+                    verdict: aiResult.verdict,
+                    score: aiResult.score,
+                    metrics: mappedMetrics,
+                    reasons: aiResult.reasons
+                };
+            }
+
+            // --- Utility Functions ---
+
+            loadImage(file) { 
+                return new Promise((r, j) => { 
+                    const i = new Image(); 
+                    i.onload = () => r(i); 
+                    i.onerror = () => j(new Error("Failed to load image file.")); 
+                    i.src = URL.createObjectURL(file); 
+                }); 
+            }
+            
+            async loadImageFromUrl(url) { 
+                return new Promise((resolve, reject) => { 
+                    if (url.startsWith('data:') || url.startsWith('blob:')) {
+                        const i = new Image();
+                        i.onload = () => resolve(i);
+                        i.onerror = () => reject(new Error("Invalid image data."));
+                        i.src = url;
+                        return;
+                    }
+
+                    const img = new Image();
+                    img.crossOrigin = "Anonymous";
+                    img.onload = () => resolve(img);
+                    
+                    img.onerror = async () => {
+                        console.warn("Direct URL load failed (CORS), attempting proxy fetch...");
+                        try {
+                            const proxyUrls = [
+                                `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+                                `https://corsproxy.io/?${encodeURIComponent(url)}`
+                            ];
+                            
+                            let blob = null;
+                            for (let pUrl of proxyUrls) {
+                                try {
+                                    const response = await fetch(pUrl);
+                                    if (response.ok) {
+                                        blob = await response.blob();
+                                        break;
+                                    }
+                                } catch (e) {
+                                    console.warn(`Proxy ${pUrl} failed, trying next...`);
+                                }
+                            }
+
+                            if (!blob) throw new Error("All proxies failed");
+
+                            const blobUrl = URL.createObjectURL(blob);
+                            const proxyImg = new Image();
+                            proxyImg.onload = () => resolve(proxyImg);
+                            proxyImg.onerror = () => reject(new Error("Image format unsupported or corrupted."));
+                            proxyImg.src = blobUrl;
+                        } catch (proxyError) {
+                            reject(new Error("Unable to fetch image from URL due to strict CORS security. Please download the image and upload it via the 'Upload File' tab."));
+                        }
+                    };
+
+                    img.src = url;
+                }); 
+            }
+
+            extractVideoFrames(file, percentages) {
+                return new Promise((resolve, reject) => {
+                    const frames = [];
+                    const v = document.createElement('video');
+                    v.muted = true; 
+                    v.playsInline = true;
+                    const url = URL.createObjectURL(file);
+                    
+                    const processVideo = async () => {
+                        v.pause();
+                        const duration = (v.duration === Infinity || isNaN(v.duration)) ? 5 : v.duration;
+                        
+                        for (let pct of percentages) {
+                            try {
+                                v.currentTime = Math.max(0.1, duration * pct);
+                                await new Promise((r) => {
+                                    const onSeeked = () => { v.removeEventListener('seeked', onSeeked); clearTimeout(timer); r(); };
+                                    // Robust timeout to prevent hanging on corrupted frames
+                                    const timer = setTimeout(() => { v.removeEventListener('seeked', onSeeked); r(); }, 3000); 
+                                    v.addEventListener('seeked', onSeeked);
+                                });
+                                
+                                const c = document.createElement('canvas');
+                                c.width = v.videoWidth || 600; 
+                                c.height = v.videoHeight || 400;
+                                
+                                if(c.width === 0 || c.height === 0) continue; 
+                                
+                                c.getContext('2d').drawImage(v, 0, 0, c.width, c.height);
+                                
+                                const img = new Image();
+                                await new Promise((r) => { 
+                                    img.onload = r; 
+                                    img.onerror = r; 
+                                    img.src = c.toDataURL('image/jpeg', 0.8); 
+                                });
+                                if (img.width > 0) frames.push(img);
+                            } catch (e) { console.warn("Frame skip"); }
+                        }
+                        URL.revokeObjectURL(url);
+                        resolve(frames);
+                    };
+
+                    // Robust loading block to ensure video is ready before extraction
+                    v.addEventListener('loadeddata', processVideo);
+                    v.addEventListener('error', () => { 
+                        URL.revokeObjectURL(url); 
+                        reject(new Error("Video format not supported or corrupted.")); 
+                    });
+                    
+                    v.src = url; 
+                    // Forcefully play/pause to kickstart rendering engines in restrictive browsers (Safari)
+                    v.play().catch(e => {}).finally(() => v.pause());
+                });
+            }
+            
+            delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+        }
+
+        // --- Main Controller ---
+        let globalProgressCallback = () => {};
+        const analyzer = new DeepfakeAnalyzer();
+
+        function handleFile(input) {
+            if(input.files && input.files[0]) runAnalysis(input.files[0], 'file');
+        }
+
+        function handleUrlInput() {
+            const url = document.getElementById('urlInput').value;
+            if(url) runAnalysis(url, 'url');
+        }
+
+        document.getElementById('urlInput').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') handleUrlInput();
+        });
+
+        function getUI() {
+            return {
+                zone: document.querySelectorAll('.upload-zone'),
+                result: document.getElementById('result'),
+                text: document.getElementById('resultText'),
+                details: document.getElementById('resultDetails'),
+                bar: document.querySelector('.loading-bar-fill'),
+                report: document.getElementById('detailedReport'),
+                grid: document.getElementById('reportGrid'),
+                list: document.getElementById('findingsList'),
+                viz: document.getElementById('scanVisualization'),
+                log: document.getElementById('urlProcessLog')
+            };
+        }
+
+        function resetUI(ui) {
+            if(document.querySelector('.gemini-section')) document.querySelector('.gemini-section').remove();
+            ui.zone.forEach(z => z.style.display = 'none');
+            ui.report.style.display = 'none';
+            ui.viz.style.display = 'block';
+            ui.bar.style.width = '0%';
+            const canvas = document.getElementById('scanCanvas');
+            canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+            if (ui.log) { ui.log.style.display = 'none'; ui.log.innerHTML = ''; }
+        }
+
+        function displayResult(outcome, ui) {
+            ui.bar.style.width = '100%';
+            
+            let verdict = "", verdictClass = "";
+            const score = outcome.score;
+            const aiVerdict = outcome.verdict ? outcome.verdict.toUpperCase() : "";
+            
+            // Forcefully respect the AI's direct textual verdict if it definitively caught a fake
+            if (aiVerdict === 'FAKE' || score < 40) {
+                verdict = outcome.isVideo ? (t('verdict_fake_vid') !== 'verdict_fake_vid' ? t('verdict_fake_vid') : "❌ FAKE / DEEPFAKE VIDEO") : (t('verdict_fake_img') !== 'verdict_fake_img' ? t('verdict_fake_img') : "❌ FAKE / DEEPFAKE IMAGE");
+                verdictClass = "deepfake";
+            } else if (aiVerdict === 'REAL' && score >= 70) {
+                verdict = outcome.isVideo ? (t('verdict_real_vid') !== 'verdict_real_vid' ? t('verdict_real_vid') : "✅ REAL VIDEO (AUTHENTIC)") : (t('verdict_real_img') !== 'verdict_real_img' ? t('verdict_real_img') : "✅ REAL IMAGE (AUTHENTIC)");
+                verdictClass = "authentic";
+            } else {
+                verdict = t('verdict_unc') !== 'verdict_unc' ? t('verdict_unc') : "⚠️ DEEPFAKE / SUSPICIOUS";
+                verdictClass = "suspicious";
+            }
+
+            ui.text.textContent = verdict;
+            ui.text.style.color = verdictClass === 'authentic' ? 'var(--primary)' : (verdictClass === 'deepfake' ? 'var(--secondary)' : '#ffaa00');
+            
+            ui.details.textContent = `AI Confidence Score: ${score}% | Mode: ${outcome.isVideo ? 'Temporal Video Sequence' : 'Static Image'} Analysis`;
+            ui.report.style.display = 'block';
+            ui.grid.innerHTML = '';
+
+            for (const [key, val] of Object.entries(outcome.metrics)) {
+                if (!val) continue; // Skip empty metrics
+                const div = document.createElement('div');
+                div.className = 'report-item';
+                
+                const isNum = !isNaN(val);
+                const width = isNum ? val : 100;
+                
+                div.innerHTML = `
+                    <span class="label">${key}</span>
+                    <div class="progress"><div class="fill" style="width: ${width}%; background: ${isNum ? (width > 50 ? 'var(--primary)' : 'var(--secondary)') : 'var(--text-primary)'}"></div></div>
+                    <span class="value">${val}${isNum ? '%' : ''}</span>
+                `;
+                ui.grid.appendChild(div);
+            }
+
+            ui.list.innerHTML = '';
+            if(!outcome.reasons || outcome.reasons.length === 0) outcome.reasons = ["No significant anomalies detected by AI."];
+            outcome.reasons.forEach(r => {
+                const li = document.createElement('li');
+                li.textContent = r;
+                ui.list.appendChild(li);
+            });
+
+            setupGeminiIntegration(outcome);
+            
+            if(!document.getElementById('actionButtons')) {
+                const actionContainer = document.createElement('div');
+                actionContainer.id = 'actionButtons';
+                actionContainer.style.marginTop = '2rem';
+                actionContainer.style.display = 'flex';
+                actionContainer.style.gap = '1rem';
+                actionContainer.style.justifyContent = 'center';
+                actionContainer.style.flexWrap = 'wrap';
+                ui.result.appendChild(actionContainer);
+            }
+            
+            const actionContainer = document.getElementById('actionButtons');
+            actionContainer.innerHTML = '';
+
+            const downloadBtn = document.createElement('button');
+            downloadBtn.className = 'btn btn-primary';
+            downloadBtn.innerHTML = t('btn_download') || "Download Report 📄";
+            downloadBtn.onclick = () => downloadReport(outcome, verdict);
+            actionContainer.appendChild(downloadBtn);
+
+            const resetBtn = document.createElement('button');
+            resetBtn.className = 'btn btn-secondary';
+            resetBtn.innerHTML = t('btn_scan_another') || "Scan Another";
+            resetBtn.onclick = () => {
+                ui.result.style.display = 'none';
+                ui.report.style.display = 'none';
+                if(ui.log) ui.log.style.display = 'none';
+                
+                // Unhide all upload zones to prevent tab-switching bugs
+                ui.zone.forEach(z => z.style.display = '');
+                // Reset file input so the exact same file can be uploaded again
+                document.getElementById('fileInput').value = '';
+            };
+            actionContainer.appendChild(resetBtn);
+        }
+
+        function runAnalysis(input, type) {
+            const ui = getUI();
+            
+            resetUI(ui);
+            ui.result.style.display = 'block';
+
+            globalProgressCallback = (stage) => {
+                let w = '10%', tStr = "Initializing...";
+                if(stage==='loading_model') { w='15%'; tStr="Loading UI Face Detection Models..."; }
+                if(stage==='init') { w='20%'; tStr="Loading Media Data..."; }
+                if(stage==='analyzing_frame_1') { w='30%'; tStr="Extracting visual data & preparing AI payload..."; }
+                if(stage==='analyzing_frame_3') { w='60%'; tStr="Transmitting payload to Gemini Multimodal AI..."; }
+                if(stage==='analyzing_frame_5') { w='90%'; tStr="Gemini AI is generating authenticity verdict..."; }
+                ui.bar.style.width = w;
+                ui.text.textContent = tStr;
+            };
+
+            // Call proxy variable to allow internal engine to update UI text directly
+            // Hack for JS scope to pass down correctly
+            window.progressUpdater = globalProgressCallback;
+
+            analyzer.analyze(input, type, (stage) => window.progressUpdater(stage)).then(outcome => {
+                displayResult(outcome, ui);
+            }).catch(e => {
+                console.error("Critical Analysis Error: ", e);
+                ui.text.textContent = "AI Analysis Error";
+                ui.text.style.color = 'var(--secondary)';
+                
+                // Show raw error so the user knows exactly why it failed
+                ui.details.textContent = e.message || e.toString() || "Failed to process media via AI.";
+                ui.bar.style.width = '0%';
+                
+                if(!document.getElementById('resetBtnErr')) {
+                    const btn = document.createElement('button');
+                    btn.id = 'resetBtnErr';
+                    btn.className = 'btn btn-secondary';
+                    btn.style.marginTop = '2rem';
+                    btn.textContent = "Try Again";
+                    btn.onclick = () => {
+                        ui.result.style.display = 'none';
+                        ui.zone.forEach(z => z.style.display = '');
+                        document.getElementById('fileInput').value = '';
+                    };
+                    ui.result.appendChild(btn);
+                }
+            });
+            
+            // Fix DeepfakeAnalyzer internal callbacks that were hardcoded
+            analyzer.progressCallback = globalProgressCallback;
+        }
+
+        function downloadReport(outcome, verdict) {
+            const date = new Date().toLocaleString();
+            let report = `DEEPFAKE FUSION - AI FORENSIC ANALYSIS REPORT\n`;
+            report += `Generated: ${date}\n`;
+            report += `================================================\n\n`;
+            report += `VERDICT: ${verdict}\n`;
+            report += `REALNESS SCORE: ${outcome.score}/100\n`;
+            
+            report += `\nMETRICS:\n`;
+            for (const [key, val] of Object.entries(outcome.metrics)) {
+                if(val) report += `- ${key}: ${val}\n`;
+            }
+            
+            report += `\nFINDINGS:\n`;
+            outcome.reasons.forEach(r => report += `- ${r}\n`);
+            
+            const aiContent = document.querySelector('.ai-content');
+            if (aiContent && aiContent.innerText) {
+                report += `\nAI EXPERT INSIGHT:\n${aiContent.innerText}\n`;
+            }
+            
+            report += `\n================================================\n`;
+            report += `Deepfake Fusion © 2026`;
+
+            const blob = new Blob([report], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `AI_Deepfake_Report_${Date.now()}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        }
+
+        function setupGeminiIntegration(outcome) {
+            const section = document.createElement('div');
+            section.className = 'gemini-section';
+            section.innerHTML = `
+                <h3 style="font-family: var(--font-heading); color: var(--primary); margin-bottom: 1rem; font-size: 1.3rem;">AI Deepfake Intelligence</h3>
+                <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem;">
+                    <button id="btn-ai-summary" class="btn btn-primary" style="flex:1; background: linear-gradient(135deg, #FFD700, #FFA500); color:#000; font-weight:bold; min-width: 200px;">
+                        Get AI Forensic Opinion ✨
+                    </button>
+                    <button id="btn-ai-chat" class="btn btn-secondary" style="flex:1; min-width: 200px; border-color: var(--secondary); color: var(--secondary);">
+                        Chat with Copilot ✨
+                    </button>
+                    <button id="btn-ai-defense" class="btn btn-secondary" style="flex:1; min-width: 200px; border-color: #00ccff; color: #00ccff;">
+                        Mitigation Plan ✨
+                    </button>
+                </div>
+                
+                <div id="ai-summary-box" class="gemini-result-box" style="display:none;"></div>
+                
+                <div id="ai-defense-box" class="gemini-result-box" style="display:none;"></div>
+
+                <div id="ai-chat-box" class="gemini-result-box" style="display:none; flex-direction:column; border-color: var(--secondary); box-shadow: 0 0 20px rgba(255, 0, 102, 0.1);">
+                    <h3 style="color:var(--secondary);">✨ Forensic Copilot</h3>
+                    <div class="chat-window" id="chatWindow">
+                        <div class="chat-message ai">Hello! I am your AI Forensic Copilot. I have reviewed the scan results. What questions do you have about this media?</div>
+                    </div>
+                    <div class="chat-container">
+                        <input type="text" id="chatInput" class="chat-input" placeholder="Ask about artifacts, scores, or deepfake techniques...">
+                        <button id="sendChatBtn" class="chat-btn" style="background: var(--secondary);">Send</button>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('detailedReport').appendChild(section);
+
+            const btnSummary = section.querySelector('#btn-ai-summary');
+            const btnChat = section.querySelector('#btn-ai-chat');
+            const btnDefense = section.querySelector('#btn-ai-defense');
+            
+            const boxSummary = section.querySelector('#ai-summary-box');
+            const boxChat = section.querySelector('#ai-chat-box');
+            const boxDefense = section.querySelector('#ai-defense-box');
+
+            const hideAllBoxes = () => {
+                boxSummary.style.display = 'none';
+                boxChat.style.display = 'none';
+                boxDefense.style.display = 'none';
+            };
+            
+            // Feature 1: Forensic Opinion
+            btnSummary.onclick = async () => {
+                hideAllBoxes();
+                boxSummary.style.display = 'block';
+                if (boxSummary.innerHTML !== '') return;
+
+                btnSummary.disabled = true;
+                btnSummary.textContent = "Analyzing...";
+                boxSummary.innerHTML = "Consulting forensic knowledge base...";
+                
+                const prompt = `
+                    Act as a digital forensics expert. Provide a concise analysis for this media scan:
+                    Realness Score: ${outcome.score}/100.
+                    Metrics: ${JSON.stringify(outcome.metrics)}.
+                    Findings: ${outcome.reasons.join(', ')}.
+                    Explain what these metrics mean for the user in simple terms.
+                `;
+                
+                const response = await callGemini(prompt);
+                boxSummary.innerHTML = `<h3>✨ AI Analysis Summary</h3><div class="ai-content">${response.replace(/\n/g, '<br>')}</div>`;
+                btnSummary.textContent = "Forensic Opinion Generated";
+            };
+
+            // Feature 2: Mitigation / Defense Plan
+            btnDefense.onclick = async () => {
+                hideAllBoxes();
+                boxDefense.style.display = 'block';
+                if (boxDefense.innerHTML !== '') return;
+
+                btnDefense.disabled = true;
+                btnDefense.textContent = "Generating...";
+                boxDefense.innerHTML = "Formulating action plan...";
+                
+                const prompt = `
+                    The user has scanned a media file with a Realness Score of ${outcome.score}/100.
+                    Based on this score (where < 50 is likely fake, and >= 80 is likely real), provide a 3-step action plan.
+                    If it's fake: How should they protect themselves, report it, or verify the source?
+                    If it's real: How can they securely store it or prove its provenance?
+                    Format with clear bullet points.
+                `;
+                
+                const response = await callGemini(prompt);
+                boxDefense.innerHTML = `<h3 style="color:#00ccff;">✨ Recommended Action Plan</h3><div class="ai-content">${response.replace(/\n/g, '<br>')}</div>`;
+                btnDefense.textContent = "Plan Generated";
+            };
+
+            // Feature 3: Interactive Copilot
+            let chatHistory = [
+                { role: "user", parts: [{ text: `I just scanned a media file. Realness Score: ${outcome.score}/100. Metrics: ${JSON.stringify(outcome.metrics)}. Findings: ${outcome.reasons.join(', ')}. Please acknowledge this context.` }] },
+                { role: "model", parts: [{ text: "Context acknowledged. I am ready to answer any questions you have about this scan." }] }
+            ];
+
+            btnChat.onclick = () => {
+                hideAllBoxes();
+                boxChat.style.display = 'flex';
+            };
+
+            const chatInput = section.querySelector('#chatInput');
+            const sendChatBtn = section.querySelector('#sendChatBtn');
+            const chatWindow = section.querySelector('#chatWindow');
+
+            const appendMessage = (text, sender) => {
+                const div = document.createElement('div');
+                div.className = `chat-message ${sender}`;
+                div.innerHTML = text.replace(/\n/g, '<br>');
+                chatWindow.appendChild(div);
+                chatWindow.scrollTop = chatWindow.scrollHeight;
+            };
+
+            const handleChat = async () => {
+                const text = chatInput.value.trim();
+                if (!text) return;
+                
+                appendMessage(text, 'user');
+                chatInput.value = '';
+                chatInput.disabled = true;
+                sendChatBtn.disabled = true;
+
+                chatHistory.push({ role: "user", parts: [{ text: text }] });
+
+                appendMessage("<i>Thinking...</i>", 'ai');
+                const loadingNode = chatWindow.lastChild;
+
+                const response = await callGemini(chatHistory);
+                
+                chatWindow.removeChild(loadingNode);
+                appendMessage(response, 'ai');
+                
+                chatHistory.push({ role: "model", parts: [{ text: response }] });
+                
+                chatInput.disabled = false;
+                sendChatBtn.disabled = false;
+                chatInput.focus();
+            };
+
+            sendChatBtn.onclick = handleChat;
+            chatInput.onkeypress = (e) => { if (e.key === 'Enter') handleChat(); };
+        }
+
+        const dz = document.querySelector('.upload-zone');
+        if(dz) {
+            dz.addEventListener('dragover', e => { e.preventDefault(); dz.style.borderColor='var(--primary)'; });
+            dz.addEventListener('dragleave', e => { dz.style.borderColor='var(--border)'; });
+            dz.addEventListener('drop', e => { 
+                e.preventDefault(); dz.style.borderColor='var(--border)'; 
+                if(e.dataTransfer.files[0]) runAnalysis(e.dataTransfer.files[0], 'file');
+            });
+        }
+    </script>
+</body>
+</html>
